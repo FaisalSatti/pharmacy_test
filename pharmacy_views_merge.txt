@@ -2538,6 +2538,23 @@ MNTH
 
 FROM MASTER_VIEW_PURRET_UM;
 
+CREATE OR REPLACE VIEW SUPP_UM_VIEW AS
+select a.co_code,
+       a.supp_div     party_code,
+       a.party_name,
+       a.address,
+       a.phone_nos,
+       a.contact_name,
+       a.gst,
+       a.ntn,
+       a.open_debit,
+       a.open_credit,
+       a.crdays,
+       a.gl_code,
+       f.descr  gl_name
+from   supp a, act_chart f
+where  a.gl_code = f.account_code and a.co_code = f.co_code;
+
 create or replace view UM_GRRT_VIEW as
 select a.co_code,
        a.doc_year,
