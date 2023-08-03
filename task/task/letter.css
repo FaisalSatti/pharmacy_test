@@ -1,0 +1,82 @@
+/* Clear floats after the columns */
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+.main{
+    /* text-align: center; */
+    /* margin-left: 3px; */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.Logo{
+    width: 60%;
+}
+.bottomLogo{
+    width: 60%;
+}
+.firstrow{
+    width: 100%;
+    text-align: center;
+    padding-left: 30%;
+    line-height: 4px;
+}   
+.secondrow{
+    width: 100%;
+    text-align: center;
+}  
+.left{
+    float:left;
+    margin-left: -25px;
+    width:40%;
+} 
+.right{
+    float:right;
+    width: 35%;
+    margin-right: -25px;
+} 
+.row{
+    width: 100%;
+}
+p{
+    font-size: 17px;
+}
+.note{
+    float:left;
+    text-justify: justify;  
+    word-spacing: 2px;
+    
+}
+.detail{
+    word-spacing: 2px;
+    text-justify: justify; 
+    line-height: 25px; 
+}
+.footer{
+    width: 100%;
+}
+.textbourder{
+    border-top: 10px solid orangered;
+}
+.textbourder2{
+    border-top: 40px solid black;
+}
+.signature{
+    width: 100%;
+    padding-left: 67px;
+}
+.signature_inner{
+    float:right;
+    width: 55%;
+    border-top: 1px solid black;
+}
+.sigh{
+    margin-top: 1px;
+
+}
+.sighs{
+   padding-top: -10px;
+}
+@page {
+margin: 80px;
+}

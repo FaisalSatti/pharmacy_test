@@ -1,0 +1,21 @@
+#ajax-loader {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-color: gray;
+    filter: alpha(opacity=75);
+    -moz-opacity: 0.75;
+    opacity: 0.75;
+    display: none;
+}
+#ajax-loader img {
+    position: fixed;
+    margin-left: 45%;
+    top: 40%;
+}
+
+.breadcrumb-item .active > button {
+    color: #add8e6 !important;
+}

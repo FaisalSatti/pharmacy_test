@@ -1,0 +1,6 @@
+create index batch_indexes on item_batch_no(CO_CODE,ITEM_CODE,LOC_CODE,BATCH_NO,EXPIRY_DATE) USING BTREE;
+create index str_mst_indexes on strtran_mst(CO_CODE,DOC_TYPE,DOC_NO,DOC_YEAR,PO_CATG,DIV_CODE) USING BTREE;
+create index str_dtl_indexes on strtran_dtl(CO_CODE,DOC_TYPE,DOC_NO,DOC_YEAR,PO_CATG,DIV_CODE) USING BTREE;
+create index party_indexes on party(CO_CODE,DIV_CODE,PARTY_CODE,PARTY_CONTROL) USING BTREE;
+create index div_indexes on division(DIV_CODE) USING BTREE;
+create index loc_indexes on location(LOC_CODE) USING BTREE;

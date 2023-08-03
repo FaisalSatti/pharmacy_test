@@ -1,0 +1,3351 @@
+CREATE OR REPLACE VIEW ACT_VIEW2 AS
+SELECT CO_CODE,
+       ACCOUNT_CODE,
+       DESCR,
+       OPEN_DEBIT,
+       OPEN_CREDIT,
+       CONTROL_CODE,
+       SUB_LEVEL1,
+       SUB_LEVEL2
+FROM   act_chart
+ORDER BY ACCOUNT_CODE;
+
+
+
+CREATE OR REPLACE VIEW PARTY_CHART_VIEW AS
+SELECT CO_CODE,
+       PARTY_DIV   ACCOUNT_CODE,
+       PARTY_NAME                       DESCR,
+       OPEN_DEBIT,
+       OPEN_CREDIT,
+       SUBSTR(PARTY_DIV,1,3)    CONTROL_CODE,
+       '0001'                                     SUB_LEVEL1,
+       SUBSTR(PARTY_DIV,8,3)    SUB_LEVEL2,
+       CO1_CODE
+FROM   party;
+
+
+
+
+CREATE OR REPLACE VIEW SUPP_CHART_VIEW AS
+SELECT CO_CODE,
+       SUPP_DIV    ACCOUNT_CODE,
+       PARTY_NAME  DESCR,
+       OPEN_DEBIT,
+       OPEN_CREDIT,
+       315           as       CONTROL_CODE,
+       '0001'         as       SUB_LEVEL1,
+       SUBSTR(SUPP_DIV,8,3)  as SUB_LEVEL2
+FROM   supp;
+
+
+
+
+CREATE OR REPLACE VIEW ITEM_CHART_VIEW AS
+SELECT CO_CODE,
+       ITEM_CODE_LEDGER  ACCOUNT_CODE,
+       ITEM_NAME_SALE    DESCR,
+       OPEN_VAL          OPEN_DEBIT,
+       NULL              OPEN_CREDIT,
+       '501'             CONTROL_CODE,
+       SUBSTR(ITEM_CODE_LEDGER,4,4)  SUB_LEVEL1,
+       SUBSTR(ITEM_CODE_LEDGER,8,3)  SUB_LEVEL2
+FROM   items;
+
+
+
+CREATE OR REPLACE VIEW ITEM_CHART_VIEW_PUR AS
+SELECT CO_CODE,
+       ITEM_PCODE        ACCOUNT_CODE,
+       ITEM_NAME_SALE    DESCR,
+       -- OPEN_VAL          OPEN_DEBIT,
+       NULL              OPEN_DEBIT,
+       NULL              OPEN_CREDIT,
+       '888'             CONTROL_CODE,
+       SUBSTR(ITEM_PCODE,4,4)  SUB_LEVEL1,
+       SUBSTR(ITEM_PCODE,8,3)  SUB_LEVEL2
+FROM   items;
+
+
+
+
+CREATE OR REPLACE VIEW ITEM_CHART_VIEW_SALE AS
+SELECT CO_CODE,
+       ITEM_SCODE        ACCOUNT_CODE,
+       ITEM_NAME_SALE    DESCR,
+       NULL              OPEN_DEBIT,
+       NULL              OPEN_CREDIT,
+       '858'             CONTROL_CODE,
+       SUBSTR(ITEM_SCODE,4,4)  SUB_LEVEL1,
+       SUBSTR(ITEM_SCODE,8,3)  SUB_LEVEL2
+FROM   items;
+
+
+
+CREATE OR REPLACE VIEW ACT_LC_VIEW2 AS
+SELECT CO_CODE,ACCOUNT_CODE,DESCR,OPEN_DEBIT,OPEN_CREDIT,CONTROL_CODE,SUB_LEVEL1,SUB_LEVEL2  FROM ACT_VIEW2
+UNION ALL
+SELECT CO_CODE,ACCOUNT_CODE,DESCR,OPEN_DEBIT,OPEN_CREDIT,CONTROL_CODE,SUB_LEVEL1,SUB_LEVEL2  FROM PARTY_CHART_VIEW
+UNION ALL
+SELECT CO_CODE,ACCOUNT_CODE,DESCR,OPEN_DEBIT,OPEN_CREDIT,CONTROL_CODE,SUB_LEVEL1,SUB_LEVEL2  FROM SUPP_CHART_VIEW
+-- UNION ALL
+-- SELECT CO_CODE,ACCOUNT_CODE,DESCR,OPEN_DEBIT,OPEN_CREDIT,CONTROL_CODE,SUB_LEVEL1,SUB_LEVEL2  FROM ITEM_CHART_VIEW
+UNION ALL
+SELECT CO_CODE,ACCOUNT_CODE,DESCR,OPEN_DEBIT,OPEN_CREDIT,CONTROL_CODE,SUB_LEVEL1,SUB_LEVEL2  FROM ITEM_CHART_VIEW_PUR
+UNION ALL
+SELECT CO_CODE,ACCOUNT_CODE,DESCR,OPEN_DEBIT,OPEN_CREDIT,CONTROL_CODE,SUB_LEVEL1,SUB_LEVEL2  FROM ITEM_CHART_VIEW_SALE;
+
+
+
+CREATE OR REPLACE VIEW ACCOUNT_VIEW_UM_CPBP AS
+SELECT A.CO_CODE,A.DOC_YEAR,A.VOUCHER_TYPE,A.VOUCHER_NO,A.VOUCHER_DATE,
+       A.CHQ_NO,A.CHQ_DATE,A.REF_NO,A.NARATION,A.PAYEE,
+       A.BANK_CASH_CODE,
+       D.DESCR          CASHBANK_NAME,
+       B.ENTRY_NO,
+       B.ACCOUNT_CODE,
+       C.DESCR          ACCOUNT_NAME,
+       B.DEBIT,
+       B.CREDIT,
+       B.REMARKS
+FROM   acttran_mst A  ,  acttran_dtl B , ACT_LC_VIEW2 C, ACT_LC_VIEW2 D
+WHERE  A.DOC_YEAR        = B.DOC_YEAR
+  AND  A.CO_CODE         = B.CO_CODE
+  AND  A.VOUCHER_TYPE    = B.VOUCHER_TYPE
+  AND  A.VOUCHER_NO      = B.VOUCHER_NO
+  AND  B.ACCOUNT_CODE    = C.ACCOUNT_CODE  AND B.CO_CODE = C.CO_CODE
+  AND  A.BANK_CASH_CODE  = D.ACCOUNT_CODE  AND A.CO_CODE = D.CO_CODE
+  AND  A.VOUCHER_TYPE IN ('CP', 'BP')
+  AND  IFNULL(B.DEBIT,0) > 0
+ORDER BY A.CO_CODE,A.VOUCHER_TYPE,A.VOUCHER_NO,B.ENTRY_NO;
+
+
+
+CREATE OR REPLACE VIEW ACCOUNT_VIEW_UM_CRBR AS
+SELECT A.CO_CODE,A.DOC_YEAR,A.VOUCHER_TYPE,A.VOUCHER_NO,A.VOUCHER_DATE,
+       A.CHQ_NO,A.CHQ_DATE,A.REF_NO,A.NARATION,A.PAYEE,
+       A.BANK_CASH_CODE,
+       D.DESCR          CASHBANK_NAME,
+       B.ENTRY_NO,
+       B.ACCOUNT_CODE,
+       C.DESCR          ACCOUNT_NAME,
+       B.DEBIT,
+       B.CREDIT,
+       B.REMARKS
+FROM   acttran_mst A  ,  acttran_dtl B , ACT_LC_VIEW2 C, ACT_LC_VIEW2 D
+WHERE  A.DOC_YEAR        = B.DOC_YEAR
+  AND  A.CO_CODE         = B.CO_CODE
+  AND  A.VOUCHER_TYPE    = B.VOUCHER_TYPE
+  AND  A.VOUCHER_NO      = B.VOUCHER_NO
+  AND  B.ACCOUNT_CODE    = C.ACCOUNT_CODE  AND B.CO_CODE = C.CO_CODE
+  AND  A.BANK_CASH_CODE  = D.ACCOUNT_CODE  AND A.CO_CODE = D.CO_CODE
+  AND  A.VOUCHER_TYPE IN ('CR', 'BR')
+  AND  IFNULL(B.CREDIT,0) > 0
+ORDER BY A.CO_CODE,A.VOUCHER_TYPE,A.VOUCHER_NO,B.ENTRY_NO;
+
+
+
+
+CREATE OR REPLACE VIEW ACCOUNT_VIEW_UM_JV AS
+SELECT A.CO_CODE,A.DOC_YEAR,A.VOUCHER_TYPE,A.VOUCHER_NO,A.VOUCHER_DATE,
+       A.REF_NO,
+       A.NARATION,A.PAYEE,
+       B.ENTRY_NO,
+       B.ACCOUNT_CODE,
+       C.DESCR  ACCOUNT_NAME,
+       B.DEBIT,
+       B.CREDIT,
+       B.REMARKS
+FROM   acttran_mst A  ,  acttran_dtl B , ACT_LC_VIEW2 C
+WHERE  A.DOC_YEAR        = B.DOC_YEAR
+  AND  A.CO_CODE         = B.CO_CODE
+  AND  A.VOUCHER_TYPE    = B.VOUCHER_TYPE
+  AND  A.VOUCHER_NO      = B.VOUCHER_NO
+  AND  B.ACCOUNT_CODE    = C.ACCOUNT_CODE  AND B.CO_CODE = C.CO_CODE
+  AND  A.VOUCHER_TYPE IN ('JV', 'CV', 'OV', 'RV')
+ORDER BY A.CO_CODE,A.VOUCHER_TYPE,A.VOUCHER_NO,B.ENTRY_NO;
+
+
+
+
+CREATE OR REPLACE VIEW ITEM_DETAIL_UM AS
+select a.co_code,
+       a.open_qty,
+       a.open_rate,
+       a.open_val,
+       a.pur_qty,
+       a.pur_rate,
+       a.pur_val,
+       a.close_qty,
+       a.close_rate,
+       a.close_val,
+       a.cost_sales,
+       a.div_code,
+       b.subdiv_code,
+       b.div_name,
+       a.item_code,
+       a.item_name_sale    item_name,
+       a.item_name_sale2   item_name2,
+       a.gen_code,
+       c.gen_name,
+       a.pur_mode,
+       a.trade_price,
+       a.tp_rate2,
+       a.tax_rate,
+       a.add_rate,
+       a.item_div          item,
+       a.um_code,
+       d.unit_name         um_name,
+       a.product_code,
+       e.product_name,
+       a.item_cat,
+       a.entry_date,
+       a.hscode,
+       a.gl_code,
+       f.descr  gl_name,
+       a.CONTAIN,
+       a.item_pcode,
+       a.item_scode
+
+from   items a, division b, gen_name c, unit d, product e, act_chart f
+where  a.div_code     = b.div_code
+and    a.gen_code     = c.gen_code
+and    a.um_code      = d.unit_code
+and    a.product_code  = e.product_code
+and    a.gl_code      =  f.account_code and a.co_code = f.co_code;
+
+
+
+create or replace view BILL_UM_LOCAL_VIEW2 as
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.po_no,
+       a.refnum2         voucher_no,
+       a.bill_key,
+       a.refnum          supp_bill,
+       a.order_refnum    co_ref,
+       a.order_party_ref party_ref,
+       a.party_code,
+       c.party_name,
+       c.address,
+       c.crdays,
+       c.contact_name,
+       c.phone_nos,
+       c.gst,
+       c.ntn,
+       a.div_code,
+       a.po_catg,
+       a.remarks,
+       a.total_gross_amt,
+       a.stax_rate,
+       a.stax_amt,
+       a.addtax_rate,
+       a.addtax_amt,
+       a.charge_amt,
+       a.other_chrgs,
+       a.other_ded,
+       a.total_net_amt,
+       b.po_no        po_no_dtl,
+       b.grn_key      grn_key_dtl,
+       b.item_code,
+       d.item_name,
+       d.um_name,
+       b.item_type,
+       b.item_detail,
+       b.qty,
+       b.receipt_qty,
+       IFNULL(b.qty,0) - IFNULL(b.receipt_qty,0) order_bal_qty,
+       b.rate,
+       b.amt,
+       b.disc_rate,
+       b.disc_amt,
+       b.net_amt,
+       b.entry_no
+from   bill_mst_um a, bill_dtl_um b, supp c,ITEM_DETAIL_UM d
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    a.party_code        = c.supp_div      and a.co_code = c.co_code
+and    b.item_code         = d.item          and b.co_code = d.co_code;
+
+
+
+create or replace view DC_UM_VIEW_NEW as
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.due_date,
+       a.do_key,
+       b.do_key_ref,
+       a.ledger_bal,
+       a.po_no,
+       a.po_date,
+       a.po_catg,
+       case
+           when a.doc_date >= ('2018-03-01') then SUBSTR(a.REFNUM2,6,25)
+           when a.doc_date <  ('2018-03-01') then a.REFNUM2
+       end REFNUM2,
+       a.refnum,
+       a.order_refnum,
+       a.order_party_ref,
+       a.crdays,
+       a.party_code,
+       c.PARTY_NAME,
+       c.address,
+       c.contact_name,
+       c.phone_nos,
+       c.gst,
+       c.ntn,
+       c.city_code,
+       g.city_name,
+       a.div_code,
+       f.div_name,
+       a.sman_code,
+       e.sman_name,
+       a.ship_mode,
+       a.ship_no,
+       a.total_gross_amt,
+       a.stax_rate,
+       a.stax_amt,
+       a.addtax_rate,
+       a.addtax_amt,
+       a.charge_amt,
+       a.other_chrgs,
+       a.other_ded,
+       a.total_net_amt,
+       a.remarks,
+       b.entry_no,
+       b.item_code,
+       d.ITEM_NAME_sale,
+       d.ITEM_NAME_sale2,
+       h.gen_name,
+       d.TP_RATE2,
+       h.um_name,
+       b.item_type,
+       CASE WHEN  b.ITEM_TYPE IN ('N')  THEN '-'
+            WHEN  b.ITEM_TYPE IN ('S')  THEN 'SCHEME'
+            WHEN  b.ITEM_TYPE IN ('F')  THEN 'FOC'
+            WHEN  b.ITEM_TYPE IN ('T')  THEN 'TRIAL'
+            ELSE  NULL
+       END  TYPE_NAME,
+       b.qty,
+       b.rate,
+       IFNULL(b.rate,0)  + (IFNULL(b.rate,0) * (IFNULL(a.stax_rate,0) + IFNULL(a.addtax_rate,0)) / 100) dummy_rate,
+       IFNULL(b.qty,0) * (IFNULL(b.rate,0)  + (IFNULL(b.rate,0) * (IFNULL(a.stax_rate,0) + IFNULL(a.addtax_rate,0)) / 100)) dummy_amt,
+       b.amt,
+       IFNULL(b.qty,0) * IFNULL(d.tp_rate2,0) amt2,
+       b.disc_rate,
+       b.disc_amt,
+       b.net_amt,
+       IFNULL(b.amt,0) - IFNULL(b.disc_amt,0) - IFNULL(b.frt_amt,0) audit_net_amt,
+       b.batch_no,
+       b.expiry_date,
+       b.item_hscode,
+       b.loc_code,
+       i.loc_name,
+       concat('HSCode :',h.hscode) AS  hscode,
+       b.G_D,
+       b.GD_DATE,
+       a.EXEMPTION,
+       b.STAX_RATE   STAX_RATE_DTL,
+       b.STAX_AMT    STAX_AMT_DTL,
+       b.FRT_RATE,
+       b.FRT_AMT,
+       b.ADD_RATE,
+       b.ADD_AMT,
+       b.EXCL_RATE,
+       IFNULL(b.amt,0) - IFNULL(b.disc_amt,0) - IFNULL(b.frt_amt,0) excl_amt,
+        c.nic_nbr,
+       c.ZONE_CODE,
+       c.DRUGLIC_NO,
+       a.ITAX_AMT,
+       a.ITAX_RATE,
+       c.GL_CODE
+
+
+
+
+from   stktran_mst a, stktran_dtl b, party c,items d,salesman e, division f, city g, ITEM_DETAIL_UM h,location i
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    a.party_code        = c.party_div and a.co_code = c.co_code
+and    b.item_code        = d.item_div   and b.co_code = d.co_code
+and    a.sman_code        = e.sman_code
+and    a.div_code         = f.div_code
+and    c.city_code        = g.city_code
+and    b.item_code        = h.item       and b.co_code = h.co_code
+and    b.loc_code         = i.loc_code
+and    a.doc_type = 'DC'
+order  by a.doc_date,a.do_key,b.entry_no,b.item_code;
+
+
+
+
+CREATE OR REPLACE VIEW GRN_LOCAL_UM_VIEW AS
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.po_no,
+       a.po_date,
+       a.do_key,
+       b.billed,
+       a.refnum,
+       a.party_code,
+       a.div_code,
+       a.po_catg,
+       a.total_gross_amt,
+       a.total_net_amt,
+       b.item_code,
+       b.product_code,
+       b.item_type,
+       b.item_detail,
+       b.ok_qty       qty,
+       b.rate,
+       b.amt,
+       b.net_amt,
+       b.entry_no,
+       c.descr         PARTY_NAME,
+       d.ITEM_NAME_sale,
+       a.stax_code,
+       a.stax_rate,
+       a.addtax_code,
+       a.addtax_rate,
+       a.refnum2
+
+from   strtran_mst a, strtran_dtl b, ACT_LC_VIEW2 c,items d
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    a.party_code        = c.account_code  and a.co_code = c.co_code
+and    b.item_code         = d.item_div      and b.co_code = d.co_code
+and    a.doc_type = 'GRNL';
+
+
+
+
+CREATE OR REPLACE VIEW PO_MST_LOCAL_UM_MST_VIEW AS
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.refnum,
+       a.party_code,
+       a.div_code,
+       a.po_catg,
+       a.total_gross_amt,
+       a.stax_rate,
+       a.stax_amt,
+       a.other_chrgs,
+       a.other_ded,
+       a.order_key,
+       a.total_net_amt,
+       a.total_qty,
+       a.total_rcvd,
+       IFNULL(a.total_qty,0) - IFNULL(a.total_rcvd,0) bal_qty,
+       c.descr         PARTY_NAME,
+       po_close,
+       pending
+from   po_mst_local_um a,  ACT_LC_VIEW2 c
+where  a.party_code        = c.account_code  and a.co_code = c.co_code;
+
+
+
+CREATE OR REPLACE VIEW PO_MST_LOCAL_UM_VIEW AS
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.refnum,
+       a.party_code,
+       a.div_code,
+       a.po_catg,
+       a.total_gross_amt,
+       a.stax_rate,
+       a.stax_amt,
+       a.other_chrgs,
+       a.other_ded,
+       a.order_key,
+       a.total_net_amt,
+       a.entry_user,
+       b.item_code,
+       b.qty,
+       b.receipt_qty,
+       IFNULL(b.qty,0) - IFNULL(b.receipt_qty,0) order_bal_qty,
+       b.product_code,
+       b.item_type,
+       b.item_detail,
+       b.rate,
+       b.amt,
+       b.disc_rate,
+       b.disc_amt,
+       b.net_amt,
+       b.entry_no,
+       c.descr         PARTY_NAME,
+       d.ITEM_NAME_sale
+
+from   po_mst_local_um a, po_dtl_local_um b, ACT_LC_VIEW2 c,items d
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    a.party_code        = c.account_code  and a.co_code = c.co_code
+and    b.item_code         = d.item_div      and b.co_code = d.co_code;
+
+
+
+
+create or replace view PO_UM_LOCAL_VIEW as
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.order_key,
+       a.refnum    co_ref,
+       a.refnum2   voucher_no,
+       a.party_ref,
+       a.dlvry_date,
+       a.party_code,
+       c.party_name,
+       c.address,
+       c.crdays,
+       c.contact_name,
+       c.phone_nos,
+       c.gst,
+       c.ntn,
+       a.div_code,
+       a.po_catg,
+       a.total_gross_amt,
+       a.stax_code,
+       a.addtax_code,
+       a.stax_rate,
+       a.stax_amt,
+       a.addtax_rate,
+       a.addtax_amt,
+       a.other_chrgs,
+       a.other_ded,
+       a.total_net_amt,
+       b.entry_no,
+       b.item_code,
+       d.item_name,
+       d.um_name,
+       b.item_type,
+       b.product_code,
+       e.product_name,
+       b.item_detail,
+       b.qty,
+       b.receipt_qty,
+       IFNULL(b.qty,0) - IFNULL(b.receipt_qty,0) order_bal_qty,
+       b.rate,
+       b.amt,
+       b.disc_rate,
+       b.disc_amt,
+       b.net_amt,
+       a.remarks
+from   po_mst_local_um a, po_dtl_local_um b, supp c,ITEM_DETAIL_UM d, product e
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    a.party_code        = c.supp_div      and a.co_code = c.co_code
+and    b.item_code         = d.item          and b.co_code = d.co_code
+and    b.product_code      = e.product_code;
+
+
+create or replace view RQ_MST_UM_VIEW as
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.refnum,
+       a.dept_code,
+       a.div_code,
+       a.po_catg,
+       a.order_key,
+       b.item_code,
+       b.item_type,
+       b.qty,
+       b.receipt_qty,
+       IFNULL(b.qty,0) - IFNULL(b.receipt_qty,0) bal_qty,
+       b.rate,
+       b.amt,
+       b.net_amt,
+       b.entry_no,
+       c.dept_name,
+       d.ITEM_NAME_sale
+from   rq_mst_um a, rq_dtl_um b, dept_store c,items d
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    a.dept_code         = c.dept_code
+and    b.item_code         = d.item_div  and b.co_code = d.co_code;
+
+
+
+create or replace view RT_UM_VIEW_NEW as
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.due_date,
+       a.do_key,
+       a.po_catg,
+       b.do_key_ref,
+       b.DO_KEY_REF_DATE,
+       b.REMARKS DTL_REMARKS,
+       a.po_no,
+       a.po_date,
+       a.refnum2,
+       a.refnum,
+       a.order_refnum,
+       a.order_party_ref,
+       a.crdays,
+       a.party_code,
+       c.PARTY_NAME,
+       c.address,
+       c.contact_name,
+       c.phone_nos,
+       c.gst,
+       c.ntn,
+       c.city_code,
+       g.city_name,
+       a.div_code,
+       f.div_name,
+       a.sman_code,
+       e.sman_name,
+       a.ship_mode,
+       a.ship_no,
+       a.total_gross_amt,
+       a.stax_rate,
+       a.stax_amt,
+       a.addtax_rate,
+       a.addtax_amt,
+       a.charge_amt,
+       a.other_chrgs,
+       a.other_ded,
+       a.total_net_amt,
+       a.remarks,
+       b.entry_no,
+       b.item_code,
+       d.ITEM_NAME_sale,
+       d.ITEM_NAME_sale2,
+       d.TP_RATE2,
+       h.um_name,
+       b.item_type,
+       CASE WHEN  b.ITEM_TYPE IN ('N')  THEN '-'
+            WHEN  b.ITEM_TYPE IN ('S')  THEN 'SCHEME'
+            WHEN  b.ITEM_TYPE IN ('F')  THEN 'FOC'
+            WHEN  b.ITEM_TYPE IN ('T')  THEN 'TRIAL'
+            ELSE  NULL
+       END  TYPE_NAME,
+       b.qty,
+       b.rate,
+       IFNULL(b.rate,0)  + (IFNULL(b.rate,0) * (IFNULL(a.stax_rate,0) + IFNULL(a.addtax_rate,0)) / 100) dummy_rate,
+       IFNULL(b.qty,0) * (IFNULL(b.rate,0)  + (IFNULL(b.rate,0) * (IFNULL(a.stax_rate,0) + IFNULL(a.addtax_rate,0)) / 100)) dummy_amt,
+       b.amt,
+       IFNULL(b.qty,0) * IFNULL(d.tp_rate2,0) amt2,
+       b.disc_rate,
+       b.disc_amt,
+       b.batch_no,
+       b.expiry_date,
+       b.loc_code,
+       i.loc_name,
+       b.g_d,
+       b.gd_date,
+       b.STAX_RATE   STAX_RATE_DTL,
+       b.STAX_AMT    STAX_AMT_DTL,
+       b.FRT_RATE,
+       b.FRT_AMT,
+       b.ADD_RATE,
+       b.ADD_AMT,
+       b.EXCL_RATE,
+       -- B.EXCL_AMT,
+       IFNULL(b.amt,0) - IFNULL(b.disc_amt,0) - IFNULL(b.frt_amt,0) excl_amt,
+       b.net_amt,
+       IFNULL(b.amt,0) - IFNULL(b.disc_amt,0) - IFNULL(b.frt_amt,0) audit_net_amt,
+       c.nic_nbr,
+       'CR'          CR,
+       'OTHERS'      OTHERS,
+       'ORDER_DELAY' ORDER_DELAY,
+       'SI'          SI,
+       'EXEMPTED'    EXEMPTED,
+        6270001011  'staxcode',
+        6270001013  'addtaxcode',
+        a.itax_rate,
+        a.itax_amt,
+        c.GL_CODE
+
+from   rt_mst a, rt_dtl b, party c,items d,salesman e, division f, city g, ITEM_DETAIL_UM h,location i
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    a.party_code        = c.party_div   and a.co_code = c.co_code
+and    b.item_code        = d.item_div     and b.co_code = d.co_code
+and    a.sman_code        = e.sman_code
+and    a.div_code         = f.div_code
+and    c.city_code        = g.city_code
+and    b.item_code        = h.item         and b.co_code = h.co_code
+and    b.loc_code         = i.loc_code
+and    a.doc_type = 'RT'
+order  by a.doc_date,a.do_key,b.entry_no,b.item_code;
+
+
+
+CREATE OR REPLACE VIEW TR_UM_VIEW AS
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.do_key,
+       a.po_no,
+       a.po_catg,
+       a.div_code,
+       f.div_name,
+       a.refnum,
+       a.wh_code,
+       c.loc_name        FROM_LOC,
+       a.wh_code2,
+       d.loc_name        TO_LOC,
+       a.remarks,
+       b.entry_no,
+       b.item_code,
+       e.ITEM_NAME_sale,
+       h.um_name,
+       b.item_type,
+       CASE WHEN  b.ITEM_TYPE IN ('N')  THEN '-'
+            WHEN  b.ITEM_TYPE IN ('S')  THEN 'SCHEME'
+            WHEN  b.ITEM_TYPE IN ('F')  THEN 'FOC'
+            WHEN  b.ITEM_TYPE IN ('T')  THEN 'TRIAL'
+            ELSE  NULL
+       END  TYPE_NAME,
+       b.qty,
+       b.rate,
+       b.amt,
+       b.batch_no,
+       b.expiry_date
+from   strtran_mst a, strtran_dtl b,location c,location d,items e,division f,ITEM_DETAIL_UM h
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    a.wh_code           = c.loc_code
+and    a.wh_code2          = d.loc_code
+and    b.item_code         = e.item_div     and b.co_code = e.co_code
+and    a.div_code          = f.div_code
+and    b.item_code         = h.item         and b.co_code = h.co_code
+and    a.doc_type = 'TR'
+order  by a.doc_date,a.do_key,b.entry_no,b.item_code;
+
+
+
+
+create or replace view TR_UM_VIEW_DIV as
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.do_key,
+       a.po_no,
+       a.po_catg,
+       a.div_code,
+       f.div_name,
+       a.refnum,
+       a.remarks,
+       b.entry_no,
+       b.item_code,
+       b.ITEM_CODE2,
+       b.LOC_CODE,
+       c.loc_name         FROM_LOC,
+       b.LOC_CODE2,
+       d.loc_name        TO_LOC,
+       e.ITEM_NAME_sale,
+       i.item_name_sale     item_name_sale2,
+       h.um_name,
+       b.item_type,
+       CASE WHEN  b.ITEM_TYPE IN ('N')  THEN '-'
+            WHEN  b.ITEM_TYPE IN ('S')  THEN 'SCHEME'
+            WHEN  b.ITEM_TYPE IN ('F')  THEN 'FOC'
+            WHEN  b.ITEM_TYPE IN ('T')  THEN 'TRIAL'
+            ELSE  NULL
+       END  TYPE_NAME,
+       b.qty,
+       b.rate,
+       b.amt,
+       b.batch_no,
+       b.expiry_date
+from   strtran_mst a, strtran_dtl b,items e,division f,ITEM_DETAIL_UM h, items i,location c, location d
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    b.item_code         = e.item_div     and b.co_code = e.co_code
+and    a.div_code          = f.div_code
+and    b.item_code         = h.item         and b.co_code = h.co_code
+and    b.item_code2        = i.item_div    and b.co_code = i.co_code
+and    b.loc_code          = c.loc_code
+and    b.loc_code2         = d.loc_code
+and    a.doc_type = 'TRDIV'
+order  by a.doc_date,a.do_key,b.entry_no,b.item_code;	
+
+
+
+CREATE OR REPLACE VIEW UM_PR_VIEW AS
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.do_key,
+       a.po_no,
+       a.po_catg,
+       a.div_code,
+       f.div_name,
+       a.refnum,
+       a.refnum2,
+       a.dept_code,
+       i.dept_name,
+       a.wh_code,
+       c.loc_name        FROM_LOC,
+       a.remarks,
+       b.entry_no,
+       b.item_code,
+       e.ITEM_NAME_sale,
+       h.um_name,
+       h.pur_mode,
+       b.item_type,
+       CASE WHEN  b.ITEM_TYPE IN ('N')  THEN '-'
+            WHEN  b.ITEM_TYPE IN ('S')  THEN 'SCHEME'
+            WHEN  b.ITEM_TYPE IN ('F')  THEN 'FOC'
+            WHEN  b.ITEM_TYPE IN ('T')  THEN 'TRIAL'
+            ELSE  NULL
+       END  TYPE_NAME,
+       b.qty,
+       b.rate,
+       b.amt,
+       b.batch_no,
+       b.expiry_date
+from   strtran_mst a, strtran_dtl b,location c,items e,division f,ITEM_DETAIL_UM h, dept_store i
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    a.wh_code           = c.loc_code
+and    b.item_code         = e.item_div     and b.co_code   = e.co_code
+and    a.dept_code         = i.dept_code
+and    a.div_code          = f.div_code
+and    b.item_code         = h.item         and b.co_code   = h.co_code
+and    a.doc_type = 'PR'
+order  by a.do_key,b.entry_no;
+
+
+
+create or replace view ONLINE_ACT as
+select acttran_mst.co_code,
+       acttran_mst.voucher_type,
+       acttran_mst.doc_year,
+       acttran_mst.voucher_no,
+       acttran_mst.voucher_date,
+       CONCAT(ACT_LC_VIEW2.descr,'   ',acttran_mst.naration,'   ',acttran_mst.chq_no,'   '
+                         ,acttran_dtl.remarks,'   ',acttran_mst.payee) NARATION,
+       case when (substr(acttran_dtl.account_code,1,1)='4' and acttran_mst.co_code=9) then acttran_dtl.qty else null end
+RECEIPT_QTY,
+       null ISSUE_QTY,
+       acttran_dtl.account_code,
+       IFNULL(acttran_dtl.debit,0) DEBIT,
+       IFNULL(acttran_dtl.credit,0) CREDIT,
+       acttran_mst.bank_cash_code,
+       acttran_dtl.entry_no,
+       acttran_dtl.co1_code
+
+  from acttran_mst, acttran_dtl,ACT_LC_VIEW2
+ where acttran_mst.co_code        = acttran_dtl.co_code
+   and acttran_mst.voucher_type   = acttran_dtl.voucher_type
+   and acttran_mst.doc_year       = acttran_dtl.doc_year
+   and acttran_mst.voucher_no     = acttran_dtl.voucher_no
+   and acttran_mst.bank_cash_code = ACT_LC_VIEW2.account_code
+   and acttran_mst.co_code        = ACT_LC_VIEW2.co_code
+   and acttran_dtl.co_code        = ACT_LC_VIEW2.co_code;
+
+
+
+
+create or replace view ONLINE_JV as
+select acttran_mst.co_code,
+       acttran_mst.voucher_type,
+       acttran_mst.doc_year,
+       acttran_mst.voucher_no,
+       acttran_mst.voucher_date,
+       CONCAT(acttran_mst.payee,' - ',acttran_mst.naration,' - ',acttran_mst.ref_no
+                         ,' - ',acttran_dtl.remarks) naration,
+       acttran_dtl.qty RECEIPT_QTY,
+       null "ISSUE_QTY",
+       acttran_dtl.account_code,
+       acttran_dtl.debit DEBIT,
+       acttran_dtl.credit CREDIT,
+       null bank_cash_code,
+       acttran_dtl.entry_no,
+       acttran_dtl.co1_code
+from   acttran_mst, acttran_dtl
+where  acttran_mst.co_code = acttran_dtl.co_code
+and    acttran_mst.voucher_type = acttran_dtl.voucher_type
+and    acttran_mst.doc_year = acttran_dtl.doc_year
+and    acttran_mst.voucher_no = acttran_dtl.voucher_no
+and    acttran_mst.voucher_type in ('JV', 'RV', 'CV', 'OV');
+
+
+
+create or replace view UM_DC_DEBIT_PARTY as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.do_key       do_key,
+       CONCAT('Sold to ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.party_code        ACCOUNT_CODE,
+       a.total_net_amt     DEBIT,
+       null                CREDIT,
+       null                bank_cash_code,
+       a.co1_code
+from   stktran_mst a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('DC');
+
+
+
+
+create or replace view UM_DC_DEBIT_FRT as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.do_key       do_key,
+       CONCAT('Sold to ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.frt_code    ACCOUNT_CODE,
+       a.other_chrgs DEBIT,
+       null          CREDIT,
+       null          bank_cash_code
+from   stktran_mst a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('DC')
+and    IFNULL(a.other_chrgs,0) > 0;
+
+
+
+create or replace view UM_DC_DEBIT_DISC as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.do_key       do_key,
+       CONCAT('Sold to ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.disc_code   ACCOUNT_CODE,
+       a.other_ded   DEBIT,
+       null          CREDIT,
+       null          bank_cash_code
+from   stktran_mst a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('DC')
+and    IFNULL(a.other_ded,0) > 0;
+
+
+
+
+create or replace view UM_DC_CREDIT_STAX as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.do_key       do_key,
+       CONCAT('Sold to ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.stax_code   ACCOUNT_CODE,
+       null          DEBIT,
+       a.stax_amt    CREDIT,
+       null          bank_cash_code
+from   stktran_mst a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('DC')
+and    IFNULL(a.stax_amt,0) > 0;
+
+
+
+
+
+create or replace view UM_DC_CREDIT_STAX_DTL as
+select a.co_code,
+       a.doc_year,
+       a.doc_type    VOUCHER_TYPE,
+       a.doc_no      VOUCHER_NO,
+       a.doc_date    VOUCHER_DATE,
+       a.do_key       do_key,
+       CONCAT('Sold : ',c.item_name_sale,' - to - ',d.descr,' - via DC# - ',REFNUM2)  naration,
+       null         "RECEIPT_QTY",
+       b.qty         ISSUE_QTY,
+       6270001011  "ACCOUNT_CODE",
+       null         "DEBIT",
+       b.stax_amt    CREDIT,
+       null         "BANK_CASH_CODE"
+from  stktran_mst a, stktran_dtl b, items c, ACT_LC_VIEW2 d
+where a.do_key     = b.do_key_ref
+and   a.doc_year   = b.doc_year
+and   b.item_code  = c.item_div and b.co_code= c.co_code
+and   a.party_code = d.account_code and a.co_code    = d.co_code
+and   a.doc_type    in ('DC')
+and   a.doc_date > ('2020-06-11')
+and   IFNULL(b.stax_amt,0) > 0
+order by a.doc_year,a.doc_date;
+
+
+
+
+create or replace view UM_DC_CREDIT_ADDSTAX_DTL as
+select a.co_code,
+       a.doc_year,
+       a.doc_type    VOUCHER_TYPE,
+       a.doc_no      VOUCHER_NO,
+       a.doc_date    VOUCHER_DATE,
+       a.do_key       do_key,
+       CONCAT('Sold : ',c.item_name_sale,' - to - ',d.descr,' - via DC# - ',REFNUM2) naration,
+       null         "RECEIPT_QTY",
+       b.qty         ISSUE_QTY,
+       6270001013  "ACCOUNT_CODE",
+       null         "DEBIT",
+       b.add_amt    CREDIT,
+       null         "BANK_CASH_CODE"
+from  stktran_mst a, stktran_dtl b, items c, ACT_LC_VIEW2 d
+where a.do_key     = b.do_key_ref
+and   a.doc_year   = b.doc_year
+and   b.item_code  = c.item_div and b.co_code= c.co_code
+and   a.party_code = d.account_code and a.co_code= d.co_code
+and   a.doc_type    in ('DC')
+and   a.doc_date > ('2020-06-11')
+and   IFNULL(b.add_amt,0) > 0
+order by a.doc_year,a.doc_date;
+
+
+
+
+create or replace view UM_DC_CREDIT_ADDTAX as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.do_key       do_key,
+       CONCAT('Sold to ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null           "RECEIPT_QTY",
+       null            ISSUE_QTY,
+       a.addtax_code   ACCOUNT_CODE,
+       null            DEBIT,
+       a.addtax_amt    CREDIT,
+       null            bank_cash_code
+from   stktran_mst a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('DC')
+and    IFNULL(a.addtax_amt,0) > 0;
+
+
+
+
+
+create or replace view UM_DC_CREDIT_CHARGE as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.do_key       do_key,
+       CONCAT('Sold to ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null           "RECEIPT_QTY",
+       null            ISSUE_QTY,
+       a.charge_code   ACCOUNT_CODE,
+       null            DEBIT,
+       a.charge_amt    CREDIT,
+       null            bank_cash_code
+from   stktran_mst a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('DC')
+and    IFNULL(a.charge_amt,0) > 0;
+
+
+
+
+
+create or replace view UM_DC_CREDIT_ITEM as
+select a.co_code,
+       a.doc_year,
+       a.doc_type    VOUCHER_TYPE,
+       a.doc_no      VOUCHER_NO,
+       a.doc_date    VOUCHER_DATE,
+       a.do_key       do_key,
+       CONCAT('Sold : ',c.item_name_sale,' - to - ',d.descr,' - via DC# - ',REFNUM2)  naration,
+       null         "RECEIPT_QTY",
+       b.qty         ISSUE_QTY,
+       c.item_scode  ACCOUNT_CODE,
+       null         "DEBIT",
+       -- b.net_amt     CREDIT,
+       IFNULL(b.amt,0) - IFNULL(b.disc_amt,0) - IFNULL(b.frt_amt,0)     CREDIT,
+       null         "BANK_CASH_CODE"
+from  stktran_mst a, stktran_dtl b, items c, ACT_LC_VIEW2 d
+where a.do_key     = b.do_key_ref
+and   a.doc_year   = b.doc_year
+and   b.item_code  = c.item_div and b.co_code    = c.co_code
+and   a.party_code = d.account_code and a.co_code    = d.co_code
+and   a.doc_type    in ('DC');
+
+
+
+
+
+create or replace view UM_RT_CREDIT_PARTY as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.do_key,
+       CONCAT('Returns from  ',' - ',c.descr)  naration,
+       null          remarks,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.party_code        ACCOUNT_CODE,
+       null                DEBIT,
+       a.total_net_amt     CREDIT,
+       null                bank_cash_code,
+       a.co1_code
+from   rt_mst a, ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('RT');
+
+
+
+
+
+create or replace view UM_RT_CREDIT_FRT as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.do_key,
+       CONCAT('Sold to ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null          remarks,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.frt_code    ACCOUNT_CODE,
+       null                DEBIT,
+       a.other_chrgs       CREDIT,
+       null                bank_cash_code
+from   rt_mst a, ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('RT')
+and    IFNULL(a.other_chrgs,0) > 0;
+
+
+
+
+
+create or replace view UM_RT_CREDIT_DISC as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.do_key,
+       CONCAT('Sold to ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null          remarks,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.disc_code    ACCOUNT_CODE,
+       null                DEBIT,
+       a.other_ded         CREDIT,
+       null                bank_cash_code
+from   rt_mst a, ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('RT')
+and    IFNULL(a.other_ded,0) > 0;
+
+
+
+create or replace view UM_RT_DEBIT_STAX as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.do_key,
+       CONCAT('Sold to ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null          remarks,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.stax_code    ACCOUNT_CODE,
+       a.stax_amt     DEBIT,
+       null           CREDIT,
+       null                bank_cash_code
+from   rt_mst a, ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('RT')
+and    a.doc_date < ('2020-07-12')
+and    IFNULL(a.stax_amt,0) > 0;
+
+
+
+
+
+create or replace view UM_RT_DEBIT_ADDTAX as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.do_key,
+       CONCAT('Sold to ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null          remarks,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.addtax_code    ACCOUNT_CODE,
+       a.addtax_amt       DEBIT,
+       null               CREDIT,
+       null                bank_cash_code
+from   rt_mst a, ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('RT')
+and    a.doc_date < ('2020-07-12')
+and    IFNULL(a.addtax_amt,0) > 0;
+
+
+
+
+create or replace view UM_RT_DEBIT_CHARGE as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.do_key,
+       CONCAT('Sold to ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null          remarks,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.charge_code    ACCOUNT_CODE,
+       a.charge_amt       DEBIT,
+       null               CREDIT,
+       null                bank_cash_code
+from   rt_mst a, ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('RT')
+and    IFNULL(a.charge_amt,0) > 0;
+
+
+
+
+create or replace view UM_RT_DEBIT_ITEM as
+select a.co_code,
+       a.doc_year,
+       a.doc_type    VOUCHER_TYPE,
+       a.doc_no      VOUCHER_NO,
+       a.doc_date    VOUCHER_DATE,
+       a.do_key,
+       CONCAT('Returns from : ',d.descr,' - Item : ',c.item_name_sale,'Qty - ',b.qty) naration,
+       b.qty         "RECEIPT_QTY",
+       null           ISSUE_QTY,
+       c.item_scode   ACCOUNT_CODE,
+       IFNULL(b.amt,0) - IFNULL(b.disc_amt,0) - IFNULL(b.frt_amt,0) "DEBIT",
+       null             CREDIT,
+       null         "BANK_CASH_CODE"
+from  rt_mst a, rt_dtl  b, items c, ACT_LC_VIEW2 d
+where a.co_code    = b.co_code
+and   a.doc_type   = b.doc_type
+and   a.doc_year   = b.doc_year
+and   a.doc_no     = b.doc_no
+and   a.div_code   = b.div_code
+and   a.po_catg    = b.po_catg
+and   b.item_code  = c.item_div and b.co_code    = c.co_code
+and   a.party_code    = d.account_code and a.co_code    = d.co_code
+and   a.doc_type      in ('RT');
+
+
+
+
+create or replace view UM_PV_LOCAL_CREDIT_PARTY as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.bill_key,
+       CONCAT(a.refnum,' - ',c.descr,' - ','Voucher# ',' - ',a.REFNUM2,' - ',a.remarks)  naration,
+       a.remarks,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.party_code        ACCOUNT_CODE,
+       null                DEBIT,
+       a.total_net_amt     CREDIT,
+       null                bank_cash_code
+from   bill_mst_um a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('LB');
+
+
+
+
+create or replace view UM_PV_LOCAL_DEBIT_ITEM as
+select a.co_code,
+       a.doc_year,
+       a.doc_type    VOUCHER_TYPE,
+       a.doc_no      VOUCHER_NO,
+       a.doc_date    VOUCHER_DATE,
+       a.bill_key,
+       CONCAT('Purchase from : ',c.item_name_sale,' - to - ',d.descr,' - via DC# - ',REFNUM2,'Qty - ',b.qty)   naration,
+       b.qty         "RECEIPT_QTY",
+       null           ISSUE_QTY,
+       c.item_pcode   ACCOUNT_CODE,
+       b.amt          "DEBIT",
+       null            CREDIT,
+       null         "BANK_CASH_CODE"
+from  bill_mst_um a, bill_dtl_um  b, items c, ACT_LC_VIEW2 d
+where a.bill_key      = b.bill_key
+and   b.item_code  = c.item_div and b.co_code    = c.co_code
+and   a.party_code    = d.account_code and a.co_code    = d.co_code
+and   a.doc_year      = b.doc_year
+and   a.doc_type      in ('LB');
+
+
+
+
+create or replace view UM_PV_LOCAL_DEBIT_STAX as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.bill_key,
+       CONCAT('Purchase from  ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       a.remarks,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.stax_code         ACCOUNT_CODE,
+       a.stax_amt          DEBIT,
+       null                CREDIT,
+       null                bank_cash_code
+from   bill_mst_um a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('LB');
+
+
+
+
+create or replace view UM_PV_LOCAL_DEBIT_ADDTAX as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.bill_key,
+       CONCAT('Purchase from  ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       a.remarks,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.addtax_code       ACCOUNT_CODE,
+       a.addtax_amt        DEBIT,
+       null                CREDIT,
+       null                bank_cash_code
+from   bill_mst_um a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('LB');
+
+
+
+
+
+create or replace view UM_PV_LOCAL_DEBIT_CHARGE as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.bill_key,
+       CONCAT('Purchase from  ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       a.remarks,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.charge_code       ACCOUNT_CODE,
+       a.charge_amt        DEBIT,
+       null                CREDIT,
+       null                bank_cash_code
+from   bill_mst_um a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('LB');
+
+
+
+create or replace view UM_PV_LOCAL_CREDIT_FRT as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+        a.bill_key,
+       CONCAT('Purchase from  ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       a.remarks,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.frt_code       ACCOUNT_CODE,
+       null             DEBIT,
+       a.other_chrgs    CREDIT,
+       null                bank_cash_code
+from   bill_mst_um a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('LB');
+
+
+
+
+create or replace view UM_PV_LOCAL_CREDIT_DISC as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.bill_key,
+       CONCAT('Purchase from  ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       a.remarks,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.disc_code       ACCOUNT_CODE,
+       null             DEBIT,
+       a.other_ded      CREDIT,
+       null                bank_cash_code
+from   bill_mst_um a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('LB');
+
+
+
+
+create or replace view UM_GR_LOCAL_DEBIT_PARTY as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       CONCAT('Pur ret : ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.party_code        ACCOUNT_CODE,
+       a.total_net_amt     DEBIT,
+       null                CREDIT,
+       null                bank_cash_code
+from   strtran_mst a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('GRRT');
+
+
+
+
+
+create or replace view UM_GR_LOCAL_CREDIT_ITEM as
+select a.co_code,
+       a.doc_year,
+       a.doc_type    VOUCHER_TYPE,
+       a.doc_no      VOUCHER_NO,
+       a.doc_date    VOUCHER_DATE,
+       CONCAT('Pur Ret  : ',c.item_name_sale,' - to - ',d.descr,' - via DC# - ',REFNUM2,' Qty - ',b.qty)   naration,
+       null         "RECEIPT_QTY",
+       b.qty         ISSUE_QTY,
+       c.item_pcode  ACCOUNT_CODE,
+       null         "DEBIT",
+       b.amt         CREDIT,
+       null         "BANK_CASH_CODE"
+from  strtran_mst a, strtran_dtl b, items c, ACT_LC_VIEW2 d
+where a.co_code    = b.co_code
+and   a.doc_type   = b.doc_type
+and   a.doc_year   = b.doc_year
+and   a.doc_no     = b.doc_no
+and   a.div_code   = b.div_code
+and   a.po_catg    = b.po_catg
+and   b.item_code  = c.item_div and b.co_code    = c.co_code
+and   a.party_code = d.account_code and a.co_code    = d.co_code
+and   a.doc_type    in ('GRRT');
+
+
+
+
+create or replace view UM_GR_LOCAL_DEBIT_FRT as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       CONCAT('Pur ret : ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.frt_code        ACCOUNT_CODE,
+       a.other_chrgs       DEBIT,
+       null                CREDIT,
+       null                bank_cash_code
+from   strtran_mst a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('GRRT');
+
+
+
+
+
+create or replace view UM_GR_LOCAL_DEBIT_DISC as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       CONCAT('Pur ret : ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.disc_code        ACCOUNT_CODE,
+       a.other_ded         DEBIT,
+       null                CREDIT,
+       null                bank_cash_code
+from   strtran_mst a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('GRRT');
+
+
+
+
+create or replace view UM_GR_LOCAL_CREDIT_STAX as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+      CONCAT( 'Pur ret : ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.stax_code        ACCOUNT_CODE,
+       null               DEBIT,
+       a.stax_amt         CREDIT,
+       null                bank_cash_code
+from   strtran_mst a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('GRRT');
+
+
+
+
+
+create or replace view UM_GR_LOCAL_CREDIT_ADDTAX as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       CONCAT('Pur ret : ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.addtax_code        ACCOUNT_CODE,
+       null               DEBIT,
+       a.addtax_amt         CREDIT,
+       null                bank_cash_code
+from   strtran_mst a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('GRRT');
+
+
+
+
+
+create or replace view UM_GR_LOCAL_CREDIT_CHARGE as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       CONCAT('Pur ret : ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       a.charge_code        ACCOUNT_CODE,
+       null               DEBIT,
+       a.charge_amt         CREDIT,
+       null                bank_cash_code
+from   strtran_mst a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('GRRT');
+
+
+
+
+create or replace view ITEM_DETAIL_UM as
+select a.co_code,
+       a.open_qty,
+       a.open_rate,
+       a.open_val,
+       a.pur_qty,
+       a.pur_rate,
+       a.pur_val,
+       a.close_qty,
+       a.close_rate,
+       a.close_val,
+       a.cost_sales,
+       a.div_code,
+       b.subdiv_code,
+       b.div_name,
+       a.item_code,
+       a.item_name_sale    item_name,
+       a.item_name_sale2   item_name2,
+       a.gen_code,
+       c.gen_name,
+       a.pur_mode,
+       a.trade_price,
+       a.tp_rate2,
+       a.tax_rate,
+       a.add_rate,
+       a.item_div          item,
+       a.um_code,
+       d.unit_name         um_name,
+       a.product_code,
+       e.product_name,
+       a.item_cat,
+       a.entry_date,
+       a.hscode,
+       a.gl_code,
+       f.descr  gl_name,
+       a.CONTAIN,
+       a.item_pcode,
+       a.item_scode
+
+from   items a, division b, gen_name c, unit d, product e, act_chart f
+where  a.div_code     = b.div_code
+and    a.gen_code     = c.gen_code
+and    a.um_code      = d.unit_code
+and    a.product_code  = e.product_code
+and    a.gl_code      =  f.account_code and a.co_code = f.co_code;
+
+
+
+
+create or replace view RT_UM_VIEW_NEW as
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.due_date,
+       a.do_key,
+       a.po_catg,
+       b.do_key_ref,
+       b.DO_KEY_REF_DATE,
+       b.REMARKS DTL_REMARKS,
+       a.po_no,
+       a.po_date,
+       a.refnum2,
+       a.refnum,
+       a.order_refnum,
+       a.order_party_ref,
+       a.crdays,
+       a.party_code,
+       c.PARTY_NAME,
+       c.address,
+       c.contact_name,
+       c.phone_nos,
+       c.gst,
+       c.ntn,
+       c.city_code,
+       g.city_name,
+       a.div_code,
+       f.div_name,
+       a.sman_code,
+       e.sman_name,
+       a.ship_mode,
+       a.ship_no,
+       a.total_gross_amt,
+       a.stax_rate,
+       a.stax_amt,
+       a.addtax_rate,
+       a.addtax_amt,
+       a.charge_amt,
+       a.other_chrgs,
+       a.other_ded,
+       a.total_net_amt,
+       a.remarks,
+       b.entry_no,
+       b.item_code,
+       d.ITEM_NAME_sale,
+       d.ITEM_NAME_sale2,
+       d.TP_RATE2,
+       h.um_name,
+       b.item_type,
+       CASE WHEN  b.ITEM_TYPE IN ('N')  THEN '-'
+            WHEN  b.ITEM_TYPE IN ('S')  THEN 'SCHEME'
+            WHEN  b.ITEM_TYPE IN ('F')  THEN 'FOC'
+            WHEN  b.ITEM_TYPE IN ('T')  THEN 'TRIAL'
+            ELSE  NULL
+       END  TYPE_NAME,
+       b.qty,
+       b.rate,
+       IFNULL(b.rate,0)  + (IFNULL(b.rate,0) * (IFNULL(a.stax_rate,0) + IFNULL(a.addtax_rate,0)) / 100) dummy_rate,
+       IFNULL(b.qty,0) * (IFNULL(b.rate,0)  + (IFNULL(b.rate,0) * (IFNULL(a.stax_rate,0) + IFNULL(a.addtax_rate,0)) / 100)) dummy_amt,
+       b.amt,
+       IFNULL(b.qty,0) * IFNULL(d.tp_rate2,0) amt2,
+       b.disc_rate,
+       b.disc_amt,
+       b.batch_no,
+       b.expiry_date,
+       b.loc_code,
+       i.loc_name,
+       b.g_d,
+       b.gd_date,
+       b.STAX_RATE   STAX_RATE_DTL,
+       b.STAX_AMT    STAX_AMT_DTL,
+       b.FRT_RATE,
+       b.FRT_AMT,
+       b.ADD_RATE,
+       b.ADD_AMT,
+       b.EXCL_RATE,
+       IFNULL(b.amt,0) - IFNULL(b.disc_amt,0) - IFNULL(b.frt_amt,0) excl_amt,
+       b.net_amt,
+       IFNULL(b.amt,0) - IFNULL(b.disc_amt,0) - IFNULL(b.frt_amt,0) audit_net_amt,
+       c.nic_nbr,
+       'CR'          CR,
+       'OTHERS'      OTHERS,
+       'ORDER_DELAY' ORDER_DELAY,
+       'SI'          SI,
+       'EXEMPTED'    EXEMPTED,
+       6270001011  "staxcode",
+       6270001013  "addtaxcode",
+        a.itax_rate,
+        a.itax_amt,
+        c.GL_CODE
+
+from   rt_mst a, rt_dtl b, party c,items d,salesman e, division f, city g, ITEM_DETAIL_UM h,location i
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    a.party_code        = c.party_div   and a.co_code = c.co_code
+and    b.item_code        = d.item_div     and b.co_code = d.co_code
+and    a.sman_code        = e.sman_code
+and    a.div_code         = f.div_code
+and    c.city_code        = g.city_code
+and    b.item_code        = h.item         and b.co_code = h.co_code
+and    b.loc_code         = i.loc_code
+and    a.doc_type = 'RT'
+order  by a.doc_date,a.do_key,b.entry_no,b.item_code;
+
+
+
+
+create or replace view UM_RT_DEBIT_STAX_DTL as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.do_key_ref,
+       CONCAT('Sold to ',' - ',party_name,' - ','Voucher# ',' - ',a.REFNUM2)   naration,
+       null          remarks,
+       qty           "RECEIPT_QTY",
+       null          "ISSUE_QTY",
+       a.staxcode     account_code,
+       a.stax_amt_dtl DEBIT,
+       null           CREDIT,
+       null           bank_cash_code
+from   RT_UM_VIEW_NEW a
+where  a.doc_date > ('2020-07-11')
+and    IFNULL(a.stax_amt_dtl,0) > 0;
+
+
+
+
+
+create or replace view UM_RT_DEBIT_ADDTAX_DTL as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.do_key_ref,
+      CONCAT('Sold to ',' - ',party_name,' - ','Voucher# ',' - ',a.REFNUM2)   naration,
+       null          remarks,
+       qty           "RECEIPT_QTY",
+       null          "ISSUE_QTY",
+       a.addtaxcode   account_code,
+       a.add_amt      DEBIT,
+       null           CREDIT,
+       null           bank_cash_code
+from   RT_UM_VIEW_NEW a
+where  a.doc_date > ('2020-07-11')
+and    IFNULL(a.add_amt,0) > 0;
+
+
+
+
+create or replace view UM_DC_CREDIT_ITAX as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.do_key       do_key,
+      CONCAT('Sold to ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       case
+          when IFNULL(a.itax_rate,0) = .1 then 3020004005
+         when IFNULL (a.itax_rate,0) = .5 then 3020004006
+         when IFNULL (a.itax_rate,0) = .2 then 3020004008
+         when IFNULL (a.itax_rate,0) =  1 then 3020004009
+       end "account_code",
+
+       null          DEBIT,
+       a.itax_amt    CREDIT,
+       null          bank_cash_code
+from   stktran_mst a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('DC')
+and    IFNULL(a.itax_amt,0) > 0;
+
+
+
+
+create or replace view UM_RT_DEBIT_ITAX as
+select a.co_code,
+       a.doc_type     voucher_type,
+       a.doc_year,
+       a.doc_no       voucher_no,
+       a.doc_date     voucher_date,
+       a.do_key       do_key,
+       a.itax_rate,
+       CONCAT('Sold to ',' - ',c.descr,' - ','Voucher# ',' - ',REFNUM2)   naration,
+       null         "RECEIPT_QTY",
+       null          ISSUE_QTY,
+       case
+         when IFNULL(a.itax_rate,0) = .1 then 3020004005
+         when IFNULL(a.itax_rate,0) = .5 then 3020004006
+         when IFNULL(a.itax_rate,0) = .2 then 3020004008
+         when IFNULL(a.itax_rate,0) =  1 then 3020004009
+       end "account_code",
+       a.itax_amt          DEBIT,
+       null                CREDIT,
+       null          bank_cash_code
+from   rt_mst a,  ACT_LC_VIEW2 c
+where  a.party_code    = c.account_code and a.co_code = c.co_code
+and    a.doc_type in ('RT')
+and    IFNULL(a.itax_amt,0) > 0;
+
+
+create or replace view MASTER_VIEW_LEDGER as
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from ONLINE_ACT
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from ONLINE_JV
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_DEBIT_PARTY
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_DEBIT_FRT
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_DEBIT_DISC
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_CREDIT_STAX
+
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_CREDIT_STAX_DTL
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_CREDIT_ADDSTAX_DTL
+
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_CREDIT_ADDTAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_CREDIT_CHARGE
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_CREDIT_ITEM
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_CREDIT_PARTY
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_CREDIT_FRT
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_CREDIT_DISC
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_DEBIT_STAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_DEBIT_ADDTAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_DEBIT_CHARGE
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_DEBIT_ITEM
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_PV_LOCAL_CREDIT_PARTY
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_PV_LOCAL_DEBIT_ITEM
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_PV_LOCAL_DEBIT_STAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_PV_LOCAL_DEBIT_ADDTAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_PV_LOCAL_DEBIT_CHARGE
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_PV_LOCAL_CREDIT_FRT
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_PV_LOCAL_CREDIT_DISC
+union all
+
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_GR_LOCAL_DEBIT_PARTY
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_GR_LOCAL_CREDIT_ITEM
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_GR_LOCAL_DEBIT_FRT
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_GR_LOCAL_DEBIT_DISC
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_GR_LOCAL_CREDIT_STAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_GR_LOCAL_CREDIT_ADDTAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_GR_LOCAL_CREDIT_CHARGE
+union all
+
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_DEBIT_STAX_DTL
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_DEBIT_ADDTAX_DTL
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_CREDIT_ITAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_DEBIT_ITAX;
+
+create or replace view UM_DC_VIEW_BATCH as
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.do_key,
+       a.div_code,
+       a.REFNUM2,
+       b.ITEM_CODE,
+       b.BATCH_NO,
+       b.EXPIRY_DATE,
+       b.AMT,
+       b.RATE,
+       NULL      RECEIPT_QTY,
+       b.QTY     ISSUE_QTY,
+       NULL      RECEIPT_AMT,
+       b.AMT     ISSUE_AMT,
+       NULL      RECEIPT_RATE,
+       b.RATE    ISSUE_RATE,
+       c.ITEM_NAME_SALE,
+       b.LOC_CODE,
+       CONCAT(d.descr,' - ',a.remarks,' - ',b.batch_no,' - ',b.expiry_date) naration
+from   stktran_mst a, stktran_dtl b, items c, ACT_LC_VIEW2 d
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    b.item_code         = c.item_div and b.co_code = c.co_code
+and   a.party_code = d.account_code and a.co_code    = d.co_code
+order by b.ITEM_CODE;
+
+create or replace view UM_DL_VIEW_BATCH as
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.do_key,
+       a.div_code,
+       a.REFNUM2,
+       b.ITEM_CODE,
+       b.BATCH_NO,
+       b.EXPIRY_DATE,
+       b.AMT,
+       b.RATE,
+       NULL      RECEIPT_QTY,
+       b.QTY     ISSUE_QTY,
+       NULL      RECEIPT_AMT,
+       b.AMT     ISSUE_AMT,
+       NULL      RECEIPT_RATE,
+       b.RATE    ISSUE_RATE,
+       c.ITEM_NAME_SALE,
+       b.LOC_CODE,
+       CONCAT(d.descr,' - ',a.remarks,' - ',b.batch_no,' - ',b.expiry_date) naration
+from   dc_mst a, dc_dtl b, items c, ACT_LC_VIEW2 d
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    b.item_code         = c.item_div and b.co_code = c.co_code
+and   a.party_code = d.account_code and a.co_code    = d.co_code
+order by b.ITEM_CODE;
+
+create or replace view UM_RT_VIEW_BATCH as
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.do_key,
+       a.div_code,
+       a.REFNUM2,
+       b.ITEM_CODE,
+       b.BATCH_NO,
+       b.AMT,
+       b.RATE,
+       b.QTY     RECEIPT_QTY,
+       NULL      ISSUE_QTY,
+       b.AMT     RECEIPT_AMT,
+       NULL      ISSUE_AMT,
+       b.RATE    RECEIPT_RATE,
+       NULL      ISSUE_RATE,
+       c.ITEM_NAME_SALE,
+       b.LOC_CODE,
+       b.EXPIRY_DATE
+from   rt_mst a, rt_dtl b, items c
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    b.item_code         = c.item_div and b.co_code = c.co_code
+order by b.ITEM_CODE;
+
+create or replace view UM_STRTRAN_VIEW_BATCH as
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.do_key,
+       a.div_code,
+       a.REFNUM2,
+       b.ITEM_CODE,
+       b.BATCH_NO,
+       b.EXPIRY_DATE,
+       b.AMT,
+       b.RATE,
+       CONCAT(a.ship_mode,' ',a.remarks,' ',b.batch_no,' ',b.expiry_date)  naration,
+       CASE WHEN a.DOC_TYPE IN ('GRNL','GRNI','GRRT','GRRI','GIN','TRDIV','ISLN','IRLN') THEN b.LOC_CODE
+            WHEN a.DOC_TYPE IN ('TR', 'PR')                                                    THEN a.WH_CODE
+       END  LOC_CODE,
+
+
+       CASE WHEN a.DOC_TYPE IN ('GRNL','GRNI', 'PR', 'TT', 'IRLN') THEN b.QTY
+            ELSE NULL
+       END  RECEIPT_QTY,
+
+       CASE WHEN a.DOC_TYPE IN ('TRDIV','TR','GIN', 'GRRI', 'GRRT', 'ISLN') THEN b.QTY
+            ELSE NULL
+       END  ISSUE_QTY,
+
+       CASE WHEN a.DOC_TYPE IN ('GRNL','GRNI', 'PR', 'TT') THEN b.AMT
+            ELSE NULL
+       END  RECEIPT_AMT,
+
+       CASE WHEN a.DOC_TYPE IN ('TR','GIN', 'GRRI', 'GRRT') THEN b.AMT
+            ELSE NULL
+       END  ISSUE_AMT,
+
+       CASE WHEN a.DOC_TYPE IN ('GRNL','GRNI', 'PR', 'TT') THEN b.RATE
+            ELSE NULL
+       END  RECEIPT_RATE,
+       CASE WHEN a.DOC_TYPE IN ('TR','GIN', 'GRRI', 'GRRT') THEN b.RATE
+            ELSE NULL
+       END  ISSUE_RATE,
+       c.ITEM_NAME_SALE
+
+from   strtran_mst a, strtran_dtl b, items c
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    b.item_code         = c.item_div and b.co_code = c.co_code
+order by b.ITEM_CODE;
+
+create or replace view UM_STRTRAN_VIEW_TT_BATCH as
+select a.co_code,
+       a.doc_year,
+       'TT'    as   doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.remarks  naration,
+       a.do_key,
+
+       CASE WHEN a.DOC_TYPE IN ('TR')  THEN b.QTY
+            ELSE NULL
+       END  RECEIPT_QTY,
+       null issue_qty,
+       b.ITEM_CODE,
+       NULL DEBIT,
+       NULL CREDIT,
+       NULL BANK_CASH_CODE,
+       a.wh_code2     loc_code,
+       a.REFNUM2,
+       a.div_code,
+       b.batch_no,
+       b.expiry_date,
+       b.rate   receipt_rate,
+       b.rate   issue_rate,
+       b.amt    receipt_amt,
+       b.amt    issue_amt
+from   strtran_mst a, strtran_dtl b, items c
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    b.item_code         = c.item_div and b.co_code = c.co_code
+and    a.doc_type = 'TR'
+order by b.ITEM_CODE;
+
+create or replace view UM_STRTRAN_VIEW_TTDIV_BATCH as
+select a.co_code,
+       a.doc_year,
+       'TTDIV'  as     doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.remarks  naration,
+       a.do_key,
+
+       CASE WHEN a.DOC_TYPE IN ('TRDIV')  THEN b.QTY
+            ELSE NULL
+       END  RECEIPT_QTY,
+       null issue_qty,
+       b.ITEM_CODE2,
+       b.item_code2  item_code,
+       NULL DEBIT,
+       NULL CREDIT,
+       NULL BANK_CASH_CODE,
+       b.LOC_CODE2       loc_code,
+       a.REFNUM2,
+       a.div_code,
+       b.batch_no,
+       b.expiry_date,
+       b.rate   receipt_rate,
+       b.rate   issue_rate,
+       b.amt    receipt_amt,
+       b.amt    issue_amt
+from   strtran_mst a, strtran_dtl b, items c
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    b.item_code         = c.item_div and b.co_code = c.co_code
+and    a.doc_type = 'TRDIV'
+order by b.ITEM_CODE;
+
+CREATE OR REPLACE VIEW MASTER_VIEW_ITEM_BATCH AS
+SELECT CO_CODE,DOC_YEAR,DOC_TYPE,DOC_NO,DOC_DATE,DO_KEY,REFNUM2,ITEM_CODE,BATCH_NO,expiry_date,loc_code,
+       RECEIPT_QTY,ISSUE_QTY,RECEIPT_AMT,ISSUE_AMT,RECEIPT_RATE,ISSUE_RATE,DIV_CODE,NARATION FROM UM_DC_VIEW_BATCH
+       WHERE DOC_DATE BETWEEN ('2020-06-12') AND ('2020-06-12')
+UNION ALL
+SELECT CO_CODE,DOC_YEAR,DOC_TYPE,DOC_NO,DOC_DATE,DO_KEY,REFNUM2,ITEM_CODE,BATCH_NO,expiry_date,loc_code,
+       RECEIPT_QTY,ISSUE_QTY,RECEIPT_AMT,ISSUE_AMT,RECEIPT_RATE,ISSUE_RATE,DIV_CODE,NARATION FROM UM_DL_VIEW_BATCH
+       WHERE DOC_DATE > ('2020-06-11')
+UNION ALL
+SELECT CO_CODE,DOC_YEAR,DOC_TYPE,DOC_NO,DOC_DATE,DO_KEY,REFNUM2,ITEM_CODE,BATCH_NO,expiry_date,loc_code,
+       RECEIPT_QTY,ISSUE_QTY,RECEIPT_AMT,ISSUE_AMT,RECEIPT_RATE,ISSUE_RATE,DIV_CODE,NULL NARATION  FROM UM_RT_VIEW_BATCH
+       WHERE DOC_DATE > ('2020-06-11')
+UNION ALL
+SELECT CO_CODE,DOC_YEAR,DOC_TYPE,DOC_NO,DOC_DATE,DO_KEY,REFNUM2,ITEM_CODE,BATCH_NO,expiry_date,loc_code,
+       RECEIPT_QTY,ISSUE_QTY,RECEIPT_AMT,ISSUE_AMT,RECEIPT_RATE,ISSUE_RATE,DIV_CODE,NARATION  FROM  UM_STRTRAN_VIEW_BATCH
+       WHERE DOC_DATE > ('2020-06-11')
+UNION ALL
+SELECT CO_CODE,DOC_YEAR,DOC_TYPE,DOC_NO,DOC_DATE,DO_KEY,REFNUM2,ITEM_CODE,BATCH_NO,expiry_date,loc_code,
+       RECEIPT_QTY,ISSUE_QTY,RECEIPT_AMT,ISSUE_AMT,RECEIPT_RATE,ISSUE_RATE,DIV_CODE,NULL NARATION  FROM UM_STRTRAN_VIEW_TT_BATCH
+       WHERE DOC_DATE > ('2020-06-11')
+UNION ALL
+SELECT CO_CODE,DOC_YEAR,DOC_TYPE,DOC_NO,DOC_DATE,DO_KEY,REFNUM2,ITEM_CODE,BATCH_NO,expiry_date,loc_code,
+       RECEIPT_QTY,ISSUE_QTY,RECEIPT_AMT,ISSUE_AMT,RECEIPT_RATE,ISSUE_RATE,DIV_CODE,NULL NARATION  FROM UM_STRTRAN_VIEW_TTDIV_BATCH
+       WHERE DOC_DATE > ('2020-06-11');
+
+       create or replace view ITEM_DETAIL_UM2 as
+select a.co_code,
+       a.div_code,
+       b.div_name,
+       a.item_code,
+       a.item_name_sale    item_name,
+       a.item_name_sale2   item_name2,
+       a.item_div          item,
+       a.item_code_ledger,
+       a.gen_code,
+       c.gen_name,
+       a.pur_mode,
+       a.item_cat,
+       a.trade_price,
+       a.um_code,
+       d.unit_name         um_name,
+       a.product_code,
+       e.product_name,
+       a.hscode
+from   items a, division b, gen_name c, unit d, product e
+where  a.div_code       = b.div_code
+and    a.gen_code       = c.gen_code
+and    a.um_code        = d.unit_code
+and    a.product_code   = e.product_code
+order by a.div_code,pur_mode,item_cat,item_div;
+
+create or replace view ITEM_UM_CO_VIEW_BATCH as
+     select
+     a.co_code,
+     a.item_code,
+     a.open_stock,
+     a.adj_qty,
+     b.item_name,
+     b.div_code,
+     b.div_name,
+     b.gen_code,
+     b.gen_name,
+     b.product_code,
+     b.product_name,
+     b.um_code,
+     b.um_name,
+     b.pur_mode,
+     b.item_cat,
+     b.trade_price,
+     b.item_code_ledger
+     from   item_batch_no a,  ITEM_DETAIL_UM2 b
+     where  a.item_code  = b.item
+     and    a.co_code   = b.co_code
+     order by a.co_code,a.item_code;
+
+create or replace view ITEM_WH_UM_VIEW_BATCH as
+select
+a.co_code,
+a.item_code,
+a.loc_code,
+a.open_stock,
+a.adj_qty,
+b.item_name,
+b.div_code,
+b.div_name,
+b.gen_code,
+b.gen_name,
+b.product_code,
+b.product_name,
+b.um_code,
+b.um_name,
+b.pur_mode,
+b.item_cat,
+b.trade_price,
+b.item_code_ledger
+from   item_batch_no a, ITEM_DETAIL_UM2 b
+where  a.item_code  = b.item
+and    a.co_code    = b.co_code
+order by a.co_code,a.item_code,a.loc_code;
+
+
+create or replace view BILL_LOCAL_VIEW as
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       DATE_FORMAT(a.doc_date,'%m') mnth,
+       a.refnum2         voucher_no,
+       a.bill_key,
+       a.refnum          supp_bill,
+       a.party_code,
+       c.party_name,
+       c.gst,
+       c.ntn,
+       b.entry_no,
+       b.item_code,
+       d.item_name,
+       d.um_name,
+       d.pur_mode,
+       d.item_cat,
+       d.div_code,
+       d.div_name,
+       d.gl_code,
+       d.gl_name,
+       b.qty,
+       b.rate,
+       b.amt,
+       a.total_gross_amt,
+       a.stax_amt,
+       a.addtax_amt,
+       a.charge_amt,
+       a.other_chrgs,
+       a.other_ded,
+       a.total_net_amt,
+       a.po_no,
+       a.po_date
+from   bill_mst_um a, bill_dtl_um b, supp c,ITEM_DETAIL_UM d
+where  a.bill_key          = b.bill_key
+and    a.party_code        = c.supp_div      and a.co_code = c.co_code
+and    b.item_code         = d.item          and b.co_code = d.co_code
+and    a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no;
+
+
+create or replace view MASTER_VIEW_BILLS_UM as
+select co_code,doc_year,doc_type,doc_no,doc_date,voucher_no,bill_key,party_code,party_name,
+entry_no,item_code,item_name,um_name,pur_mode,div_code,div_name,qty,rate,amt,total_gross_amt,
+stax_amt,addtax_amt,charge_amt,other_chrgs,other_ded,total_net_amt,item_cat,gl_code,gl_name,mnth
+from BILL_LOCAL_VIEW;
+
+
+create or replace view PUR_RET_LOCAL_VIEW as
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       DATE_FORMAT(a.doc_date,'%m') mnth,
+       a.refnum2         voucher_no,
+       a.do_key,
+       a.refnum          supp_bill,
+       a.party_code,
+       c.descr           party_name,
+       b.entry_no,
+       b.do_key_ref,
+       b.item_code,
+       d.item_name,
+       d.um_name,
+       d.pur_mode,
+       d.item_cat,
+       d.div_code,
+       d.div_name,
+       d.gl_code,
+       d.gl_name,
+       b.qty,
+       b.rate,
+       b.amt,
+       a.total_gross_amt,
+       a.stax_amt,
+       a.addtax_amt,
+       a.charge_amt,
+       a.other_chrgs,
+       a.other_ded,
+       a.total_net_amt
+from   strtran_mst a, strtran_dtl b, ACT_LC_VIEW2 c,ITEM_DETAIL_UM d
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    a.party_code        = c.account_code  and a.co_code = c.co_code
+and    b.item_code         = d.item          and b.co_code = d.co_code
+and    a.doc_type = 'GRRT';
+
+
+create or replace view MASTER_VIEW_PURRET_UM as
+select co_code,doc_year,doc_type,doc_no,doc_date,voucher_no,do_key,party_code,party_name,
+entry_no,item_code,item_name,um_name,pur_mode,div_code,div_name,qty,rate,amt,total_gross_amt,
+stax_amt,addtax_amt,charge_amt,other_chrgs,other_ded,total_net_amt,do_key_ref,item_cat,gl_code,gl_name,mnth
+from PUR_RET_LOCAL_VIEW;
+
+CREATE OR REPLACE VIEW ORDER_UM_VIEW AS
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.order_key,
+       a.refnum,
+       a.refnum2,
+       a.party_ref,
+       a.party_code,
+       c.PARTY_NAME,
+       c.address,
+       c.contact_name,
+       c.phone_nos,
+       c.gst,
+       c.ntn,
+       c.city_code,
+       c.zone_code,
+       c.DRUGLIC_NO,
+       c.DRUGLIC_DATE,
+       g.city_name,
+       a.div_code,
+       f.div_name,
+       a.crdays,
+       a.sman_code,
+       e.sman_name,
+       a.po_catg,
+       a.total_gross_amt,
+       a.stax_rate,
+       a.stax_amt,
+       a.addtax_rate,
+       a.addtax_amt,
+       a.other_chrgs,
+       a.other_ded,
+       a.total_net_amt,
+       a.remarks,
+       b.entry_no,
+       b.item_code,
+       d.item_name_sale,
+       h.um_name,
+       b.item_type,
+       CASE WHEN  b.ITEM_TYPE IN ('N')  THEN '-'
+            WHEN  b.ITEM_TYPE IN ('S')  THEN 'SCHEME'
+            WHEN  b.ITEM_TYPE IN ('F')  THEN 'FOC'
+            WHEN  b.ITEM_TYPE IN ('T')  THEN 'TRIAL'
+            ELSE  NULL
+       END  TYPE_NAME,
+       b.qty,
+       b.receipt_qty,
+       IFNULL(b.qty,0) - IFNULL(b.receipt_qty,0) order_bal_qty,
+       b.rate,
+       b.amt,
+       b.disc_rate,
+       b.disc_amt,
+       b.net_amt,
+       b.STAX_RATE   STAX_RATE_DTL,
+       b.STAX_AMT    STAX_AMT_DTL,
+       b.FRT_RATE,
+       b.FRT_AMT,
+       b.ADD_RATE,
+       b.ADD_AMT,
+       b.EXCL_RATE,
+       b.EXCL_AMT,
+       b.G_D,
+       b.GD_DATE,
+       b.ITEM_TAXRATE,
+       b.BATCH_NO,
+       b.EXPIRY_DATE,
+       b.ITEM_HSCODE,
+      b.LOC_CODE
+from   order_mst a, order_dtl b, party c,items d,salesman e, division f, city g, ITEM_DETAIL_UM h
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    a.party_code        = c.party_div and a.co_code = c.co_code
+and    b.item_code        = d.item_div     and b.co_code = d.co_code
+and    a.sman_code        = e.sman_code
+and    a.div_code         = f.div_code
+and    c.city_code        = g.city_code
+and    b.item_code        = h.item and b.co_code = h.co_code
+and    a.doc_year > 2021
+order  by a.doc_date,a.order_key,b.entry_no,b.item_code;
+
+
+CREATE OR REPLACE VIEW NET_PURCHASE_VIEW AS
+SELECT
+CO_CODE,
+DOC_TYPE,
+DOC_NO,
+DOC_DATE,
+BILL_KEY    DO_KEY,
+PARTY_CODE,
+PARTY_NAME,
+ITEM_CODE,
+ITEM_NAME,
+PUR_MODE,
+ITEM_CAT,
+UM_NAME,
+QTY     PUR_QTY,
+RATE    PUR_RATE,
+AMT     PUR_AMT,
+NULL    RET_QTY,
+NULL    RET_RATE,
+NULL    RET_AMT,
+DIV_CODE,
+DIV_NAME,
+GL_CODE,
+GL_NAME,
+MNTH
+FROM MASTER_VIEW_BILLS_UM
+UNION ALL
+SELECT
+CO_CODE,
+DOC_TYPE,
+DOC_NO,
+DOC_DATE,
+DO_KEY,
+PARTY_CODE,
+PARTY_NAME,
+ITEM_CODE,
+ITEM_NAME,
+PUR_MODE,
+ITEM_CAT,
+UM_NAME,
+NULL    PUR_QTY,
+NULL    PUR_RATE,
+NULL    PUR_AMT,
+QTY     RET_QTY,
+RATE    RET_RATE,
+AMT     RET_AMT,
+DIV_CODE,
+DIV_NAME,
+GL_CODE,
+GL_NAME,
+MNTH
+
+FROM MASTER_VIEW_PURRET_UM;
+
+create or replace view UM_GRRT_VIEW as
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.do_key,
+       a.party_ref,
+       a.refnum,
+       a.refnum2,
+       a.party_code,
+       c.PARTY_NAME,
+       c.address,
+       c.contact_name,
+       c.phone_nos,
+       c.gst,
+       c.ntn,
+       a.div_code,
+       f.div_name,
+       a.total_gross_amt,
+       a.stax_rate,
+       a.stax_amt,
+       a.addtax_rate,
+       a.addtax_amt,
+       a.charge_amt,
+       a.other_chrgs,
+       a.other_ded,
+       a.total_net_amt,
+       a.remarks,
+       b.entry_no,
+       b.item_code,
+       h.ITEM_NAME  item_name_sale,
+       h.item_cat,
+       h.pur_mode,
+       h.um_name,
+       b.item_type,
+       b.do_key_ref,
+       CASE WHEN  b.ITEM_TYPE IN ('N')  THEN '-'
+            WHEN  b.ITEM_TYPE IN ('S')  THEN 'SCHEME'
+            WHEN  b.ITEM_TYPE IN ('F')  THEN 'FOC'
+            WHEN  b.ITEM_TYPE IN ('T')  THEN 'TRIAL'
+            ELSE  NULL
+       END  TYPE_NAME,
+       b.qty,
+       b.rate,
+       b.amt,
+       b.net_amt,
+       b.batch_no,
+       b.expiry_date,
+       b.loc_code,
+       i.loc_name,
+       c.gl_code,
+       c.gl_name
+from   strtran_mst a, strtran_dtl b, SUPP_UM_VIEW c,  division f, ITEM_DETAIL_UM2 h,location i
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    a.party_code        = c.party_code and a.co_code = c.co_code
+and    a.div_code         = f.div_code
+and    b.item_code        = h.item        and b.co_code = h.co_code
+and    b.loc_code         = i.loc_code
+and    a.doc_type = 'GRRT'
+order  by a.doc_date,a.do_key,b.entry_no,b.item_code;
+
+CREATE OR REPLACE VIEW GIN_UM_VIEW AS
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.do_key,
+       a.po_no,
+       a.po_date,
+       a.po_catg,
+       a.div_code,
+       f.div_name,
+       a.refnum,
+       a.refnum2,
+       a.order_refnum,
+       a.dept_code,
+       c.dept_name,
+       a.remarks,
+       b.entry_no,
+       b.item_code,
+       d.ITEM_NAME_sale,
+       h.um_name,
+       h.pur_mode,
+       b.item_type,
+       CASE WHEN  b.ITEM_TYPE IN ('N')  THEN '-'
+            WHEN  b.ITEM_TYPE IN ('S')  THEN 'SCHEME'
+            WHEN  b.ITEM_TYPE IN ('F')  THEN 'FOC'
+            WHEN  b.ITEM_TYPE IN ('T')  THEN 'TRIAL'
+            ELSE  NULL
+       END  TYPE_NAME,
+       b.qty,
+       b.rate,
+       b.amt,
+       b.net_amt,
+       b.batch_no,
+       b.expiry_date,
+       b.loc_code,
+       i.loc_name
+
+
+from   strtran_mst a, strtran_dtl b,dept_store c,items d,division f,ITEM_DETAIL_UM h,location i
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    a.dept_code         = c.dept_code
+and    b.item_code         = d.item_div     and b.co_code = d.co_code
+and    a.div_code          = f.div_code
+and    b.item_code         = h.item         and b.co_code = h.co_code
+and    b.loc_code          = i.loc_code
+and    a.doc_type = 'GIN'
+order  by a.doc_date,a.do_key,b.entry_no,b.item_code;
+
+CREATE OR REPLACE VIEW PARTY_UM_VIEW AS
+select a.co_code,
+       a.party_div     party_code,
+       a.party_name,
+       a.address,
+       a.phone_nos,
+       a.contact_name,
+       a.gst,
+       a.ntn,
+       a.open_debit,
+       a.open_credit,
+       a.div_code,
+       b.div_name,
+       a.zone_code,
+       c.zone_name,
+       a.crdays,
+       a.crdays_yn,
+       a.crlimit,
+       a.crlimit_yn,
+       a.DRUGLIC_NO,
+       a.DRUGLIC_DATE,
+       a.city_code,
+       d.city_name,
+       a.gl_code,
+       f.descr            gl_name,
+       a.salesman_code    sman_code,
+       e.sman_name,
+       a.co1_code,
+       a.catagory
+
+from   party a, division b, zone c, city d, salesman e, act_chart f
+where  a.div_code     = b.div_code
+and    a.zone_code    = c.zone_code
+and    a.city_code    = d.city_code
+and    a.salesman_code = e.sman_code
+and    a.gl_code       = f.account_code and a.co_code = f.co_code;
+CREATE OR REPLACE VIEW ISLN_UM_VIEW AS
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.do_key,
+       a.po_no,
+       a.po_catg,
+       a.div_code,
+       f.div_name,
+       a.refnum,
+       a.refnum2,
+       a.order_refnum,
+       a.party_code,
+       c.party_name,
+       c.gl_code,
+       c.gl_name,
+       c.address,
+       c.city_name,
+       c.phone_nos,
+       a.remarks,
+       b.entry_no,
+       b.item_code,
+       d.ITEM_NAME_sale,
+       h.unit_name um_name,
+       d.pur_mode,
+       d.item_cat,
+       b.item_type,
+       CASE WHEN  b.ITEM_TYPE IN ('N')  THEN '-'
+            WHEN  b.ITEM_TYPE IN ('S')  THEN 'SCHEME'
+            WHEN  b.ITEM_TYPE IN ('F')  THEN 'FOC'
+            WHEN  b.ITEM_TYPE IN ('T')  THEN 'TRIAL'
+            ELSE  NULL
+       END  TYPE_NAME,
+       b.qty,
+       b.qty    issue_qty,
+       b.rate,
+       b.amt,
+       b.net_amt,
+       b.batch_no,
+       b.expiry_date,
+       b.loc_code,
+       i.loc_name
+
+
+from   strtran_mst a, strtran_dtl b,PARTY_UM_VIEW c,items d,division f,unit h,location i
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    a.party_code        = c.party_code   and a.co_code = c.co_code
+and    b.item_code         = d.item_div     and b.co_code = d.co_code
+and    a.div_code          = f.div_code
+and    d.um_code         = h.unit_code         and a.co_code = d.co_code
+and    b.loc_code          = i.loc_code
+and    a.doc_type in ('ISLN')
+order  by a.doc_date,a.do_key,b.entry_no,b.item_code;
+
+create or replace view IRLN_UM_VIEW as
+select a.co_code,
+       a.doc_year,
+       a.doc_type,
+       a.doc_no,
+       a.doc_date,
+       a.do_key,
+       a.po_no,
+       a.po_catg,
+       a.div_code,
+       f.div_name,
+       a.refnum,
+       a.refnum2,
+       a.order_refnum,
+       a.party_code,
+       c.gl_code,
+       c.gl_name,
+       c.party_name,
+       c.address,
+       c.city_name,
+       c.phone_nos,
+       a.remarks,
+       b.entry_no,
+       b.item_code,
+       d.ITEM_NAME_sale,
+       h.unit_name um_name,
+       d.pur_mode,
+       d.item_cat,
+       b.item_type,
+       b.isln_ref,
+       CASE WHEN  b.ITEM_TYPE IN ('N')  THEN '-'
+            WHEN  b.ITEM_TYPE IN ('S')  THEN 'SCHEME'
+            WHEN  b.ITEM_TYPE IN ('F')  THEN 'FOC'
+            WHEN  b.ITEM_TYPE IN ('T')  THEN 'TRIAL'
+            ELSE  NULL
+       END  TYPE_NAME,
+       b.qty,
+       b.qty     receipt_qty,
+       b.rate,
+       b.amt,
+       b.net_amt,
+       b.batch_no,
+       b.expiry_date,
+       b.loc_code,
+       i.loc_name
+
+
+from   strtran_mst a, strtran_dtl b,PARTY_UM_VIEW c,items d,division f,unit h,location i
+where  a.co_code           = b.co_code
+and    a.doc_type          = b.doc_type
+and    a.doc_year          = b.doc_year
+and    a.doc_no            = b.doc_no
+and    a.div_code          = b.div_code
+and    a.po_catg           = b.po_catg
+and    a.party_code        = c.party_code   and a.co_code = c.co_code
+and    b.item_code         = d.item_div     and b.co_code = d.co_code
+and    a.div_code          = f.div_code
+and    d.um_code         = h.unit_code         and a.co_code = d.co_code
+and    b.loc_code          = i.loc_code
+and    a.doc_type = 'IRLN'
+order  by a.doc_date,a.do_key,b.entry_no,b.item_code;
+
+CREATE OR REPLACE VIEW ITEM_BATCH_NO_VIEW AS
+SELECT
+A. CO_CODE,
+A. ITEM_CODE,
+case
+    when substr(A.item_code,2,1) = '-' then substr(A.item_code,1,1)
+    when substr(A.item_code,3,1) = '-' then substr(A.item_code,1,2)
+end div_code,
+B. ITEM_NAME_SALE    ITEM_NAME,
+B. HSCODE,
+A. LOC_CODE,
+C. LOC_NAME,
+A. BATCH_NO,
+A. EXPIRY_DATE,
+A. G_D,
+A. GD_DATE,
+A. ITEM_HSCODE,
+A. ITEM_TAXRATE,
+A.OPEN_STOCK,
+A.RCPT_STOCK,
+A.ISS_STOCK,
+IFNULL(A.OPEN_STOCK,0) + IFNULL(A.RCPT_STOCK,0) - IFNULL(A.ISS_STOCK,0) + IFNULL(A.ADJ_QTY,0) BAL_STOCK
+FROM item_batch_no A, items B, location C
+WHERE A.CO_CODE = B.CO_CODE AND A.ITEM_CODE = B.ITEM_DIV
+AND A.LOC_CODE = C.LOC_CODE
+AND IFNULL(A.OPEN_STOCK,0) + IFNULL(A.RCPT_STOCK,0) - IFNULL(A.ISS_STOCK,0) + IFNULL(A.ADJ_QTY,0) > 0;
+
+CREATE OR REPLACE VIEW AUDIT_ACCOUNT_VIEW2 AS
+SELECT A.CO_CODE,A.DOC_YEAR,A.VOUCHER_TYPE,A.VOUCHER_NO,A.VOUCHER_DATE,
+       B.ACCOUNT_CODE,
+       B.CO1_CODE,
+       C.DESCR,
+       B.DEBIT,B.CREDIT,B.AMOUNT
+FROM   acttran_mst A  ,  acttran_dtl B , ACT_LC_VIEW2 C
+WHERE  A.DOC_YEAR      = B.DOC_YEAR
+  AND  A.CO_CODE       = B.CO_CODE
+  AND  A.VOUCHER_TYPE  = B.VOUCHER_TYPE
+  AND  A.VOUCHER_NO    = B.VOUCHER_NO
+  AND  B.ACCOUNT_CODE  = C.ACCOUNT_CODE  AND B.CO_CODE = C.CO_CODE;
+
+  CREATE OR REPLACE VIEW ACT_DTL_VIEW AS
+SELECT CO_CODE,DOC_YEAR,VOUCHER_TYPE,VOUCHER_NO,VOUCHER_DATE,NULL DO_KEY,
+ACCOUNT_CODE,CO1_CODE,DEBIT,CREDIT
+FROM AUDIT_ACCOUNT_VIEW2
+WHERE SUBSTR(ACCOUNT_CODE,1,3) IN('610', '650')
+ORDER BY ACCOUNT_CODE,DEBIT,CREDIT;
+
+CREATE OR REPLACE VIEW DC_MST_VIEW AS
+SELECT CO_CODE,DOC_YEAR,DOC_TYPE VOUCHER_TYPE,DOC_NO VOUCHER_NO,DOC_DATE VOUCHER_DATE,
+DO_KEY,PARTY_CODE ACCOUNT_CODE,CO1_CODE,TOTAL_NET_AMT DEBIT,NULL CREDIT,itax_rate,itax_amt
+FROM stktran_mst
+WHERE DOC_TYPE = 'DC'
+ORDER BY PARTY_CODE;
+
+CREATE OR REPLACE VIEW RT_MST_VIEW AS
+SELECT CO_CODE,DOC_YEAR,DOC_TYPE VOUCHER_TYPE,DOC_NO VOUCHER_NO,DOC_DATE VOUCHER_DATE,
+DO_KEY,PARTY_CODE ACCOUNT_CODE,CO1_CODE,NULL DEBIT,TOTAL_NET_AMT CREDIT
+FROM rt_mst
+WHERE DOC_TYPE = 'RT'
+ORDER BY PARTY_CODE;
+
+CREATE OR REPLACE VIEW MASTER_VIEW_PARTY_LEDGER AS
+SELECT CO_CODE,DOC_YEAR,VOUCHER_TYPE,VOUCHER_NO,VOUCHER_DATE,NULL DO_KEY,ACCOUNT_CODE,DEBIT,CREDIT FROM ACT_DTL_VIEW
+UNION ALL
+SELECT CO_CODE,DOC_YEAR,VOUCHER_TYPE,VOUCHER_NO,VOUCHER_DATE,NULL DO_KEY,ACCOUNT_CODE,DEBIT,CREDIT FROM DC_MST_VIEW
+UNION ALL
+SELECT CO_CODE,DOC_YEAR,VOUCHER_TYPE,VOUCHER_NO,VOUCHER_DATE,NULL DO_KEY,ACCOUNT_CODE,DEBIT,CREDIT FROM RT_MST_VIEW;
+
+
+CREATE OR REPLACE VIEW PARTY_LEDGER_UM AS
+SELECT
+A.CO_CODE,
+A.DOC_YEAR,
+A.VOUCHER_TYPE,
+A.VOUCHER_NO,
+A.VOUCHER_DATE,
+A.ACCOUNT_CODE,
+A.DEBIT,
+A.CREDIT,
+B.DIV_CODE,
+B.DIV_NAME,
+B.ZONE_CODE,
+B.ZONE_NAME,
+B.GL_CODE,
+B.GL_NAME
+FROM MASTER_VIEW_PARTY_LEDGER A, PARTY_UM_VIEW B
+WHERE A.ACCOUNT_CODE = B.PARTY_CODE AND A.CO_CODE = B.CO_CODE
+ORDER BY A.ACCOUNT_CODE;
+
+
+CREATE OR REPLACE VIEW ACCOUNT_VIEW_UM_CRBR AS
+SELECT A.CO_CODE,A.DOC_YEAR,A.VOUCHER_TYPE,A.VOUCHER_NO,A.VOUCHER_DATE,
+       A.CHQ_NO,A.CHQ_DATE,A.REF_NO,A.NARATION,A.PAYEE,
+       A.BANK_CASH_CODE,
+       D.DESCR          CASHBANK_NAME,
+       B.ENTRY_NO,
+       B.ACCOUNT_CODE,
+       C.DESCR          ACCOUNT_NAME,
+       B.DEBIT,
+       B.CREDIT,
+       B.REMARKS
+FROM   acttran_mst A  ,  acttran_dtl B , ACT_LC_VIEW2 C, ACT_LC_VIEW2 D
+WHERE  A.DOC_YEAR        = B.DOC_YEAR
+  AND  A.CO_CODE         = B.CO_CODE
+  AND  A.VOUCHER_TYPE    = B.VOUCHER_TYPE
+  AND  A.VOUCHER_NO      = B.VOUCHER_NO
+  AND  B.ACCOUNT_CODE    = C.ACCOUNT_CODE  AND B.CO_CODE = C.CO_CODE
+  AND  A.BANK_CASH_CODE  = D.ACCOUNT_CODE  AND A.CO_CODE = D.CO_CODE
+  AND  A.VOUCHER_TYPE IN ('CR', 'BR')
+  AND  IFNULL(B.CREDIT,0) > 0
+ORDER BY A.CO_CODE,A.VOUCHER_TYPE,A.VOUCHER_NO,B.ENTRY_NO;
+
+CREATE OR REPLACE VIEW ACCOUNT_VIEW_UM_CPBP AS
+SELECT A.CO_CODE,A.DOC_YEAR,A.VOUCHER_TYPE,A.VOUCHER_NO,A.VOUCHER_DATE,
+       A.CHQ_NO,A.CHQ_DATE,A.REF_NO,A.NARATION,A.PAYEE,
+       A.BANK_CASH_CODE,
+       D.DESCR          CASHBANK_NAME,
+       B.ENTRY_NO,
+       B.ACCOUNT_CODE,
+       C.DESCR          ACCOUNT_NAME,
+       B.DEBIT,
+       B.CREDIT,
+       B.REMARKS
+FROM   acttran_mst A  ,  acttran_dtl B , ACT_LC_VIEW2 C, ACT_LC_VIEW2 D
+WHERE  A.DOC_YEAR        = B.DOC_YEAR
+  AND  A.CO_CODE         = B.CO_CODE
+  AND  A.VOUCHER_TYPE    = B.VOUCHER_TYPE
+  AND  A.VOUCHER_NO      = B.VOUCHER_NO
+  AND  B.ACCOUNT_CODE    = C.ACCOUNT_CODE  AND B.CO_CODE = C.CO_CODE
+  AND  A.BANK_CASH_CODE  = D.ACCOUNT_CODE  AND A.CO_CODE = D.CO_CODE
+  AND  A.VOUCHER_TYPE IN ('CP', 'BP')
+  AND  IFNULL(B.DEBIT,0) > 0
+ORDER BY A.CO_CODE,A.VOUCHER_TYPE,A.VOUCHER_NO,B.ENTRY_NO;
+
+
+
+create or replace view ONLINE_ACT2 as
+select acttran_mst.co_code,
+       acttran_mst.voucher_type,
+       acttran_mst.doc_year,
+       acttran_mst.voucher_no,
+       acttran_mst.voucher_date,
+       CONCAT(ACT_LC_VIEW2.descr,'   ',acttran_mst.naration,'   ',acttran_mst.chq_no,'   ',acttran_dtl.remarks) NARATION,
+       case when (substr(acttran_dtl.account_code,1,1)='4' and acttran_mst.co_code=9) then acttran_dtl.qty else null end
+RECEIPT_QTY,
+       null ISSUE_QTY,
+
+       CASE
+         WHEN  SUBSTR(acttran_dtl.ACCOUNT_CODE,1,3) IN     ('315', '610','650') THEN acttran_dtl.GL_CODE
+         WHEN  SUBSTR(acttran_dtl.ACCOUNT_CODE,1,3) NOT IN ('315', '610','650') THEN acttran_dtl.ACCOUNT_CODE
+       END
+       ACCOUNT_CODE,
+
+       IFNULL(acttran_dtl.debit,0) DEBIT,
+       IFNULL(acttran_dtl.credit,0) CREDIT,
+       acttran_mst.bank_cash_code,
+       acttran_dtl.entry_no
+  from acttran_mst, acttran_dtl,ACT_LC_VIEW2
+ where acttran_mst.co_code        = acttran_dtl.co_code
+   and acttran_mst.voucher_type   = acttran_dtl.voucher_type
+   and acttran_mst.doc_year       = acttran_dtl.doc_year
+   and acttran_mst.voucher_no     = acttran_dtl.voucher_no
+   and acttran_mst.bank_cash_code = ACT_LC_VIEW2.account_code
+   and acttran_mst.co_code        = ACT_LC_VIEW2.co_code
+   and acttran_dtl.co_code        = ACT_LC_VIEW2.co_code;
+
+   create or replace view ONLINE_JV2 as
+select acttran_mst.co_code,
+       acttran_mst.voucher_type,
+       acttran_mst.doc_year,
+       acttran_mst.voucher_no,
+       acttran_mst.voucher_date,
+       acttran_mst.naration,
+       acttran_dtl.qty RECEIPT_QTY,
+       null "ISSUE_QTY",
+       CASE
+         WHEN  SUBSTR(acttran_dtl.ACCOUNT_CODE,1,3) IN     ('315', '610','650') THEN acttran_dtl.GL_CODE
+         WHEN  SUBSTR(acttran_dtl.ACCOUNT_CODE,1,3) NOT IN ('315', '610','650') THEN acttran_dtl.ACCOUNT_CODE
+       END
+       ACCOUNT_CODE,
+       acttran_dtl.debit DEBIT,
+       acttran_dtl.credit CREDIT,
+       null bank_cash_code,
+       acttran_dtl.entry_no
+from   acttran_mst, acttran_dtl
+where  acttran_mst.co_code = acttran_dtl.co_code
+and    acttran_mst.voucher_type = acttran_dtl.voucher_type
+and    acttran_mst.doc_year = acttran_dtl.doc_year
+and    acttran_mst.voucher_no = acttran_dtl.voucher_no
+and    acttran_mst.voucher_type in ('JV', 'RV', 'CV', 'OV');
+
+
+
+create or replace view UM_DC_DEBIT_PARTY_GL as
+select a.co_code,
+       a.voucher_type,
+       a.doc_year,
+       a.voucher_no,
+       a.voucher_date,
+       a.naration,
+       a.RECEIPT_QTY,
+       a.ISSUE_QTY,
+       d.gl_code   ACCOUNT_CODE,
+       a.DEBIT,
+       null        CREDIT,
+       null        bank_cash_code
+from   UM_DC_DEBIT_PARTY a,  party d
+where  a.account_code    = d.party_div and a.co_code = d.co_code
+order by a.voucher_no;
+
+create or replace view UM_DC_CREDIT_ITEM_GL as
+select a.co_code,
+       a.voucher_type,
+       a.doc_year,
+       a.voucher_no,
+       a.voucher_date,
+       a.naration,
+       a.RECEIPT_QTY,
+       a.ISSUE_QTY,
+       d.gl_code_sale  ACCOUNT_CODE,
+       null            DEBIT,
+       a.CREDIT,
+       null            bank_cash_code
+from   UM_DC_CREDIT_ITEM a,  items d
+where  a.account_code    = d.item_scode and a.co_code = d.co_code
+order by a.voucher_no;
+
+
+create or replace view UM_RT_CREDIT_PARTY_GL as
+select a.co_code,
+       a.voucher_type,
+       a.doc_year,
+       a.voucher_no,
+       a.voucher_date,
+       a.naration,
+       a.RECEIPT_QTY,
+       a.ISSUE_QTY,
+       d.gl_code   ACCOUNT_CODE,
+       null        DEBIT,
+       a.CREDIT,
+       null        bank_cash_code
+from   UM_RT_CREDIT_PARTY a,  party d
+where  a.account_code    = d.party_div and a.co_code = d.co_code
+order by a.voucher_no;
+
+create or replace view UM_RT_DEBIT_ITEM_GL as
+select a.co_code,
+       a.voucher_type,
+       a.doc_year,
+       a.voucher_no,
+       a.voucher_date,
+       a.naration,
+       a.RECEIPT_QTY,
+       a.ISSUE_QTY,
+       d.gl_code_sale  ACCOUNT_CODE,
+       a.DEBIT,
+       null            CREDIT,
+       null            bank_cash_code
+from   UM_RT_DEBIT_ITEM a,  items d
+where  a.account_code    = d.item_scode and a.co_code = d.co_code
+order by a.voucher_no;
+
+
+create or replace view UM_GR_LOCAL_DEBIT_PARTY_GL as
+select
+a.co_code,
+a.voucher_type,
+a.doc_year,
+a.voucher_no,
+a.voucher_date,
+a.naration,
+a.RECEIPT_QTY,
+a.ISSUE_QTY,
+d.gl_code      ACCOUNT_CODE,
+a.DEBIT,
+a.CREDIT,
+a.bank_cash_code
+from   UM_GR_LOCAL_DEBIT_PARTY a,  supp  d
+where  a.account_code = d.supp_div and a.co_code = d.co_code
+order by a.voucher_no;
+
+
+create or replace view UM_GR_LOCAL_CREDIT_ITEM_GL as
+select
+a.co_code,
+a.doc_year,
+a.VOUCHER_TYPE,
+a.VOUCHER_NO,
+a.VOUCHER_DATE,
+a.naration,
+a.RECEIPT_QTY,
+a.ISSUE_QTY,
+d.gl_code     ACCOUNT_CODE,
+a.DEBIT,
+a.CREDIT,
+a.BANK_CASH_CODE
+from  UM_GR_LOCAL_CREDIT_ITEM a, items d
+where a.account_code  = d.item_pcode and a.co_code = d.co_code;
+
+create or replace view UM_PV_LOCAL_CREDIT_PARTY_GL as
+select
+a.co_code,
+a.voucher_type,
+a.doc_year,
+a.voucher_no,
+a.voucher_date,
+a.naration,
+a.RECEIPT_QTY,
+a.ISSUE_QTY,
+d.gl_code      ACCOUNT_CODE,
+a.DEBIT,
+a.CREDIT,
+a.bank_cash_code
+from   UM_PV_LOCAL_CREDIT_PARTY a,  supp d
+where  a.account_code = d.supp_div and a.co_code = d.co_code
+order by a.voucher_no;
+
+
+create or replace view UM_PV_LOCAL_DEBIT_ITEM_GL as
+select
+a.co_code,
+a.doc_year,
+a.VOUCHER_TYPE,
+a.VOUCHER_NO,
+a.VOUCHER_DATE,
+a.naration,
+a.RECEIPT_QTY,
+a.ISSUE_QTY,
+d.gl_code     ACCOUNT_CODE,
+a.DEBIT,
+a.CREDIT,
+a.BANK_CASH_CODE
+from  UM_PV_LOCAL_DEBIT_ITEM a, items d
+where a.account_code = d.item_pcode and a.co_code = d.co_code;
+
+create or replace view MASTER_VIEW_LEDGER_GL as
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from ONLINE_ACT2
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from ONLINE_JV2
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_DEBIT_PARTY_GL
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_DEBIT_FRT
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_DEBIT_DISC
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_CREDIT_STAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_CREDIT_ADDTAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_CREDIT_CHARGE
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_CREDIT_ITEM_GL
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_CREDIT_PARTY_GL
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_DEBIT_ITEM_GL
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_CREDIT_FRT
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_CREDIT_DISC
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_DEBIT_STAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_DEBIT_ADDTAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_DEBIT_CHARGE
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_GR_LOCAL_DEBIT_PARTY_GL
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_GR_LOCAL_CREDIT_ITEM_GL
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_GR_LOCAL_DEBIT_FRT
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_GR_LOCAL_DEBIT_DISC
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_GR_LOCAL_CREDIT_STAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_GR_LOCAL_CREDIT_ADDTAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_GR_LOCAL_CREDIT_CHARGE
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_CREDIT_STAX_DTL
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_CREDIT_ADDSTAX_DTL
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_DEBIT_STAX_DTL
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_DEBIT_ADDTAX_DTL
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_DC_CREDIT_ITAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_RT_DEBIT_ITAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_PV_LOCAL_CREDIT_PARTY_GL
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_PV_LOCAL_DEBIT_ITEM_GL
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_PV_LOCAL_DEBIT_STAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_PV_LOCAL_DEBIT_ADDTAX
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_PV_LOCAL_DEBIT_CHARGE
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_PV_LOCAL_CREDIT_FRT
+union all
+select co_code,voucher_type,doc_year,voucher_no,voucher_date,naration,receipt_qty,issue_qty,account_code,debit,credit,bank_cash_code from UM_PV_LOCAL_CREDIT_DISC;
+
+
+CREATE OR REPLACE VIEW ACT_VIEW2_GL AS
+SELECT CO_CODE,
+       ACCOUNT_CODE,
+       GL_TYPE,
+       DESCR,
+       OPEN_DEBIT,
+       OPEN_CREDIT,
+       CONTROL_CODE,
+       SUB_LEVEL1,
+       SUB_LEVEL2
+
+FROM   act_chart
+WHERE  CONTROL_CODE NOT BETWEEN 601 AND 613
+AND    CONTROL_CODE <> '301'
+AND    GL_TYPE IS NULL
+ORDER BY ACCOUNT_CODE;
+
+CREATE OR REPLACE VIEW PARTY_CHART_VIEW_GL AS
+SELECT
+A.CO_CODE,
+A.GL_CODE  ACCOUNT_CODE,
+B.DESCR,
+SUM(IFNULL(A.OPEN_DEBIT,0))  OPEN_DEBIT,
+SUM(IFNULL(A.OPEN_CREDIT,0)) OPEN_CREDIT,
+SUBSTR(A.GL_CODE,1,3)     CONTROL_CODE,
+SUBSTR(A.GL_CODE,4,4)     SUB_LEVEL1,
+SUBSTR(A.GL_CODE,8,3)     SUB_LEVEL2
+FROM party A, act_chart B
+WHERE A.GL_CODE = B.ACCOUNT_CODE and A.co_code = B.co_code
+AND   A.CO_CODE = B.CO_CODE
+GROUP BY
+A.CO_CODE,
+A.GL_CODE,
+B.DESCR,
+SUBSTR(A.GL_CODE,1,3),
+SUBSTR(A.GL_CODE,4,4),
+SUBSTR(A.GL_CODE,8,3)
+ORDER BY A.CO_CODE,A.GL_CODE;
+
+CREATE OR REPLACE VIEW SUPP_CHART_VIEW_GL AS
+SELECT
+A.CO_CODE,
+A.GL_CODE                 ACCOUNT_CODE,
+B.DESCR,
+SUM(IFNULL(A.OPEN_DEBIT,0))  OPEN_DEBIT,
+SUM(IFNULL(A.OPEN_CREDIT,0)) OPEN_CREDIT,
+SUBSTR(A.GL_CODE,1,3)     CONTROL_CODE,
+SUBSTR(A.GL_CODE,4,4)     SUB_LEVEL1,
+SUBSTR(A.GL_CODE,8,3)     SUB_LEVEL2
+FROM supp A, act_chart B
+WHERE A.GL_CODE = B.ACCOUNT_CODE and A.co_code = B.co_code
+AND   A.CO_CODE = B.CO_CODE
+GROUP BY
+A.CO_CODE,
+A.GL_CODE,
+B.DESCR,
+SUBSTR(A.GL_CODE,1,3),
+SUBSTR(A.GL_CODE,4,4),
+SUBSTR(A.GL_CODE,8,3)
+ORDER BY A.CO_CODE,A.GL_CODE;
+
+
+CREATE OR REPLACE VIEW ITEM_CHART_VIEW_PUR_GL AS
+SELECT
+A.CO_CODE,
+A.GL_CODE                 ACCOUNT_CODE,
+B.DESCR,
+NULL                      OPEN_DEBIT,
+NULL                      OPEN_CREDIT,
+SUBSTR(A.GL_CODE,1,3)     CONTROL_CODE,
+SUBSTR(A.GL_CODE,4,4)     SUB_LEVEL1,
+SUBSTR(A.GL_CODE,8,3)     SUB_LEVEL2
+FROM items A, act_chart B
+WHERE A.GL_CODE = B.ACCOUNT_CODE and A.co_code = B.co_code
+AND   A.CO_CODE = B.CO_CODE
+GROUP BY
+A.CO_CODE,
+A.GL_CODE,
+B.DESCR,
+SUBSTR(A.GL_CODE,1,3),
+SUBSTR(A.GL_CODE,4,4),
+SUBSTR(A.GL_CODE,8,3)
+ORDER BY A.CO_CODE,A.GL_CODE;
+
+
+CREATE OR REPLACE VIEW ITEM_CHART_VIEW_SALE_GL AS
+SELECT
+A.CO_CODE,
+A.GL_CODE_SALE              ACCOUNT_CODE,
+B.DESCR,
+NULL                        OPEN_DEBIT,
+NULL                        OPEN_CREDIT,
+SUBSTR(A.GL_CODE_SALE,1,3)  CONTROL_CODE,
+SUBSTR(A.GL_CODE_SALE,4,4)  SUB_LEVEL1,
+SUBSTR(A.GL_CODE_SALE,8,3)  SUB_LEVEL2
+FROM items A, act_chart B
+WHERE A.GL_CODE_SALE  = B.ACCOUNT_CODE and A.co_code = B.co_code
+AND   A.CO_CODE = B.CO_CODE
+AND A.GL_CODE_SALE IS NOT NULL
+GROUP BY
+A.CO_CODE,
+A.GL_CODE_SALE,
+B.DESCR,
+SUBSTR(A.GL_CODE_SALE,1,3),
+SUBSTR(A.GL_CODE_SALE,4,4),
+SUBSTR(A.GL_CODE_SALE,8,3)
+ORDER BY A.CO_CODE,A.GL_CODE_SALE;
+
+
+
+
+CREATE OR REPLACE VIEW ACT_LC_VIEW2_GL AS
+SELECT CO_CODE,ACCOUNT_CODE,DESCR,OPEN_DEBIT,OPEN_CREDIT,CONTROL_CODE,SUB_LEVEL1,SUB_LEVEL2  FROM ACT_VIEW2_GL
+UNION ALL
+SELECT CO_CODE,ACCOUNT_CODE,DESCR,OPEN_DEBIT,OPEN_CREDIT,CONTROL_CODE,SUB_LEVEL1,SUB_LEVEL2  FROM PARTY_CHART_VIEW_GL
+UNION ALL
+SELECT CO_CODE,ACCOUNT_CODE,DESCR,OPEN_DEBIT,OPEN_CREDIT,CONTROL_CODE,SUB_LEVEL1,SUB_LEVEL2  FROM SUPP_CHART_VIEW_GL
+UNION ALL
+SELECT CO_CODE,ACCOUNT_CODE,DESCR,OPEN_DEBIT,OPEN_CREDIT,CONTROL_CODE,SUB_LEVEL1,SUB_LEVEL2  FROM ITEM_CHART_VIEW_PUR_GL
+UNION ALL
+SELECT CO_CODE,ACCOUNT_CODE,DESCR,OPEN_DEBIT,OPEN_CREDIT,CONTROL_CODE,SUB_LEVEL1,SUB_LEVEL2  FROM ITEM_CHART_VIEW_SALE_GL

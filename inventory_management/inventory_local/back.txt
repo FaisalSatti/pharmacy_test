@@ -1,0 +1,6 @@
+  <td ><textarea rows="1" style="text-align:right; padding:0 2px 0 0;height:35px;width:100px;"  pattern="[a-zA-Z0-9 ,._-]{1,}"  type="text"  name="" id = "item_dtl" class="item_dtl"></textarea></td>
+                                            <td ><input  style="text-align:right; padding:0 2px 0 0;height:35px;width:60px;"  pattern="[a-zA-Z0-9 ,._-]{1,}"  type="text"  name="" id = "quantity" class="quantity"></td>
+                                            <td style="width: 8%;"><input  style="text-align:right; padding:0 2px 0 0;width:83px;height:35px" type="number"  name="" id="rate" class="rate"></td>
+                                            <td style="width: 10%;"><input  style="text-align:right; padding:0 2px 0 0;width:100px;height:35px"  pattern="[a-zA-Z0-9 ,._-]{1,}"  type="text"  name="" id = "amt" class="amt"></td>
+                                            <td ><textarea  style="height:35px;background-color:#ccd4e1;font-size:12px;width:100px;"  pattern="[a-zA-Z0-9 ,._-]{1,}" tabindex="-1"  type="text"   name="" id = "billed" class="billed" readonly></textarea></td>
+                                           <td ><button type = "button" class="btn btn-sm btn-primary add"><i class="fa fa-plus"></i></button></td>

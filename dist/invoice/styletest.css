@@ -1,0 +1,70 @@
+.column {
+  float: left;
+  width: 24.5%;
+}
+
+.columnD1 {
+  float: left;
+  width: 30%;
+}
+.columnD2 {
+  float: left;
+  width: 40%;
+}
+.columnD3 {
+  float: left;
+  width: 50%;
+}
+.columnD4 {
+  float: left;
+  width: 15%;
+}
+.columnD5 {
+  float: left;
+  width: 30%;
+}
+.columnD6 {
+  float: left;
+  width: 20%;
+}
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.main{
+border: 1px solid black;
+text-align: center;
+height: 100%;
+margin-left: 3px;
+ }
+.divrow2{
+  margin-top: -20px;
+}
+.divrow3{
+  margin-top: -10px;
+}
+.divrow4{
+  margin-top: 15px;
+}
+.divrow5{
+  margin-top: -35px;
+}
+.divrow6{
+  margin-top: -25px;
+}
+.textbourder{
+   border-top: 1px solid black;
+ 
+   margin-left: 5px;
+   margin-top: 20px;
+   margin-right: 5px;
+}
+p {
+  font-size: 13px;
+}
+@page {
+margin: 5px;
+}

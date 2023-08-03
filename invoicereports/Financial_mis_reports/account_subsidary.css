@@ -1,0 +1,57 @@
+
+  .ctrl_desc{
+    /* font-size: 18px !important; */
+    width:70% !important;
+  }
+  /* .sub_desc1{ */
+    /* font-size: 15px !important; */
+    /* width:30% !important
+  } */
+  .sub_desc1{
+    /* font-size: 18px !important; */
+    width:70% !important;
+  }
+  .sub_lvl1{
+    /* font-size: 15px !important; */
+    width:30% !important
+  }
+  .sub_desc2{
+    /* font-size: 18px !important; */
+    width:85% !important;
+  }
+  .sub_level2{
+    /* font-size: 15px !important; */
+    width:30% !important
+  }
+    .report_section1{
+        border-bottom:3px solid grey !important;
+        width: 100% !important;
+        color: rgb(0, 0, 0) !important;
+        font-size: 20px !important;
+        font-weight: 700 !important;
+        /*padding-top:15px !important;*/
+        padding-left:5px !important;
+        text-align:center !important;
+        border-collapse: separate !important;
+        border-spacing:10px !important;
+    }
+    .report_section2{
+        border-bottom:3px solid grey !important;
+        width: 100% !important;
+        color: rgb(93, 93, 93) !important;
+        font-size: larger !important;
+        font-weight: 700 !important;
+        padding-top:3px !important;
+        text-align:center !important;
+        /*border-spacing:10px !important;*/
+    }
+    .bread{
+        text-align:center !important;
+    }
+        table th, td {
+      font-size:13px;
+    }
+    #toprow td {
+      font-size:13px;
+    }
+
